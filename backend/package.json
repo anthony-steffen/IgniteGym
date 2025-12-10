@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev src/server.ts" 
+    "dev": "nodemon src/server.ts", 
+
+    "ts:config": "npx tsc --init"
   },
   "keywords": [],
   "author": "",
