@@ -1,20 +1,22 @@
-# Use the official Node.js 18 image as the base image
-FROM node:18-alpine
+FROM node:18
 
-# Set the working directory in the container
-WORKDIR /app-backend
+# Diretório de trabalho
+WORKDIR /usr/src/app
 
-# Copy the package.json file and the package-lock.json file to the container
-COPY package* .
+# Copia package.json e package-lock
+COPY package*.json ./
 
-# Install the dependencies using npm
+# Instala dependências incluindo devDependencies
 RUN npm install
 
-# Copy the rest of the application code to the container
+# Copia o restante do projeto
 COPY . .
 
-# Expose the port the application will run on
+# Compila TS → JS
+RUN npm run build
+
+# Expõe porta
 EXPOSE 3001
 
-# Run the application
-CMD [ "npm", "start" ]
+# Comando de inicialização
+CMD ["npm", "run", "start"]

@@ -5,8 +5,8 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "tsc && node scripts/build-success.js",
+    "start": "node scripts/start-log.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts", 
 
