@@ -12,28 +12,19 @@ services:
     depends_on:
       - db
     env_file:
-       - ./backend/.env
-    environment:
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
-      DB_HOST: ${DB_HOST}
-      JWT_SECRET: ${JWT_SECRET}
-      PORT: ${PORT}
+       - ./backend/.env.docker
 
   db:
     image: mysql:8.0
     container_name: ignitegym_db
     restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ignitegym
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: adminpass
     ports:
       - "3306:3306"
-    env_file:
-      - ./backend/.env           # Carrega variáveis de MySQL do .env da raiz
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
 
