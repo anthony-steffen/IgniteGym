@@ -1,3 +1,4 @@
+// backend/src/database/config/database.ts
 import dotenv from "dotenv";
 
 dotenv.config();

@@ -1,10 +1,12 @@
 import { Sequelize } from "sequelize";
 
-if (!process.env.DATABASE_URL) {
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
   throw new Error("DATABASE_URL não definida");
 }
 
-export const sequelize = new Sequelize(process.env.DATABASE_URL, {
+export const sequelize = new Sequelize(databaseUrl, {
   dialect: "mysql",
   logging: false,
 });

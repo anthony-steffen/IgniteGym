@@ -1,3 +1,4 @@
+// backend/src/server.ts
 import app from "./app";
 import { connectDatabase } from "./database";
 import { runMigrations } from "./database/runMigrations";
