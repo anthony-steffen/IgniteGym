@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Expõe porta
-EXPOSE 3001
+EXPOSE 8080
 
 # Comando de inicialização
 CMD ["npm", "run", "start"]
