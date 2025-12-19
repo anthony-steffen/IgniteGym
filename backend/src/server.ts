@@ -1,12 +1,20 @@
-// backend/src/server.ts
 import app from "./app";
-import dotenv from "dotenv";
-import "./database"
+import { connectDatabase } from "./database";
+import { runMigrations } from "./database/runMigrations";
 
-dotenv.config();
+async function bootstrap() {
+  console.log("🚀 Iniciando aplicação");
 
-const port = process.env.PORT || 3001;
+  await connectDatabase();
+  await runMigrations();
 
-app.listen(process.env.PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${process.env.PORT}`);
+  const port = process.env.PORT || 3000;
+  app.listen(port, () =>
+    console.log(`🚀 Servidor rodando na porta ${port}`)
+  );
+}
+
+bootstrap().catch((err) => {
+  console.error("❌ Erro fatal:", err);
+  process.exit(1);
 });
