@@ -1,21 +1,16 @@
-import { exec } from "child_process";
+import { sequelize } from "./sequelize";
 
-export function runMigrations(): Promise<void> {
+export async function runMigrations() {
   if (process.env.RUN_MIGRATIONS !== "true") {
-    console.log("⏭️ Migrations desativadas");
-    return Promise.resolve();
+    console.log("⏭️ RUN_MIGRATIONS=false — pulando migrations");
+    return;
   }
 
-  return new Promise((resolve, reject) => {
-    console.log("📦 Rodando migrations...");
+  console.log("📦 Rodando migrations via Sequelize");
 
-    exec("npx sequelize-cli db:migrate", (error, stdout, stderr) => {
-      if (error) {
-        console.error(stderr);
-        return reject(error);
-      }
-      console.log(stdout);
-      resolve();
-    });
-  });
+  await sequelize.sync({ alter: false }); 
+  // ⬆️ usa suas models
+  // ⬆️ cria tabelas se não existirem
+
+  console.log("✅ Migrations aplicadas");
 }

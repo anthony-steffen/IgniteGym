@@ -1,18 +1,20 @@
-import { Sequelize } from "sequelize";
+import { sequelize } from "./sequelize";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL não definida");
-}
-
-export const sequelize = new Sequelize(databaseUrl, {
-  dialect: "mysql",
-  logging: false,
-});
-
-export async function connectDatabase() {
+export async function connectDatabase(
+  retries = 10,
+  delay = 3000
+): Promise<void> {
   console.log("🔌 Conectando ao banco...");
-  await sequelize.authenticate();
-  console.log("🟢 Banco conectado com sucesso!");
+
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await sequelize.authenticate();
+      console.log("🟢 Banco conectado com sucesso!");
+      return;
+    } catch (err) {
+      console.log(`🔁 Tentativa ${i}/${retries} falhou`);
+      if (i === retries) throw err;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
 }
