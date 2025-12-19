@@ -1,10 +1,10 @@
 // src/database/config/database.ts
 
-const path = require('path');
+const path = require("path");
 
 module.exports = {
-  'config': path.resolve(__dirname, 'src', 'database', 'config', 'database.js'),
-  'models-path': path.resolve(__dirname, 'src', 'database', 'models'),
-  'migrations-path': path.resolve(__dirname, 'src', 'database', 'migrations'),
-  'seeders-path': path.resolve(__dirname, 'src', 'database', 'seeders'),
+  config: path.resolve("src/database/config/database.js"),
+  migrationsPath: path.resolve("src/database/migrations"),
+  seedersPath: path.resolve("src/database/seeders"),
+  modelsPath: path.resolve("src/database/models"),
 };
