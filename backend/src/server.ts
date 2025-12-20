@@ -2,6 +2,7 @@ import "./config/env"; // 🚨 PRIMEIRA LINHA
 import app from "./app";
 import { connectDatabase } from "./database";
 import { runMigrations } from "./database/runMigrations";
+import { runSeeds } from "./database/runSeeds";
 
 async function bootstrap() {
   console.log("🚀 Iniciando aplicação");
@@ -9,6 +10,7 @@ async function bootstrap() {
 
   await connectDatabase();
   await runMigrations();
+  await runSeeds();
 
   const port = process.env.PORT || 3001;
   app.listen(port, () =>
