@@ -7,7 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// rota base
+// healthcheck
+app.get("/", (_, res) => res.json({ status: "ok" }));
+
 app.use(routes);
 
 export default app;
