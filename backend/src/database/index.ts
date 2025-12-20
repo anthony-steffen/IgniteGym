@@ -1,4 +1,12 @@
+// backend/src/database/index.ts
 import { sequelize } from "./sequelize";
+// import dotenv from "dotenv";
+
+// dotenv.config({
+//   path: process.env.NODE_ENV === "production"
+//     ? ".env"
+//     : ".env.local",
+// });
 
 export async function connectDatabase(
   retries = 10,

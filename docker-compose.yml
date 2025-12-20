@@ -13,6 +13,8 @@ services:
       - db
     env_file:
        - ./backend/.env.docker
+    environment:
+      - DOCKER=true
 
   db:
     image: mysql:8.0
