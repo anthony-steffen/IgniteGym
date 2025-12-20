@@ -12,7 +12,11 @@ async function bootstrap() {
   await runMigrations();
   await runSeeds();
 
-  const port = process.env.PORT || 3001;
+  const port = Number(process.env.PORT);
+  if (!port) {
+    throw new Error("❌ PORT não definido");
+  }
+
   app.listen(port, () =>
     console.log(`🚀 Servidor rodando na porta ${port}`)
   );
