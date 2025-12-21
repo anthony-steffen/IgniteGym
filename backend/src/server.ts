@@ -1,3 +1,4 @@
+//backend/src/server.ts
 import "./config/env"; // 🚨 PRIMEIRA LINHA
 import app from "./app";
 import { connectDatabase } from "./database";

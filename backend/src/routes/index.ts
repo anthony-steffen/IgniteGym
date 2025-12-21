@@ -1,5 +1,7 @@
+// backend/src/routes/index.ts
 import { Router } from "express";
 import usersRoutes from "./users.routes";
+import sessionsRoutes from "./sessions.routes";
 
 const routes = Router();
 
@@ -10,5 +12,6 @@ routes.get("/health", (_, res) => {
 
 // suas rotas reais
 routes.use("/users", usersRoutes);
+routes.use("/sessions", sessionsRoutes);
 
 export default routes;
