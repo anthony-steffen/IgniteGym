@@ -2,13 +2,13 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { tenantMiddleware } from "../middlewares/tenantMiddleware";
 
-const usersRoutes = Router();
+const router = Router();
 
-usersRoutes.get('/', authMiddleware, (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
   return res.json({
-    message: 'Rota protegida',
+    message: 'Users endpoint funcionando!',
     user: req.user,
   });
 });
 
-export default usersRoutes;
+export default router;
