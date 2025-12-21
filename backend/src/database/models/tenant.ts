@@ -1,58 +1,46 @@
 import { Sequelize, DataTypes, Model, Optional } from "sequelize";
 
-interface TenantAttributes {
+export interface TenantAttributes {
   id: string;
   name: string;
-  slug: string;
-  is_active: boolean;
-  created_at?: Date;
-  updated_at?: Date;
+  domain: string;
 }
 
-type TenantCreationAttributes = Optional<
-  TenantAttributes,
-  "id" | "is_active" | "created_at" | "updated_at"
->;
+export interface TenantCreationAttributes
+  extends Optional<TenantAttributes, "id"> {}
 
-module.exports = (sequelize: Sequelize) => {
-  const Tenant = sequelize.define<
-    Model<TenantAttributes, TenantCreationAttributes>
-  >(
-    "Tenant",
+export class Tenant
+  extends Model<TenantAttributes, TenantCreationAttributes>
+  implements TenantAttributes
+{
+  declare id: string;
+  declare name: string;
+  declare domain: string;
+}
+
+export const initTenantModel = (sequelize: Sequelize) => {
+  Tenant.init(
     {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      slug: {
+      domain: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
       },
-      is_active: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: true,
-      },
     },
     {
+      sequelize,
       tableName: "tenants",
       underscored: true,
       timestamps: true,
     }
   );
-
-  (Tenant as any).associate = (models: any) => {
-    Tenant.hasMany(models.User, {
-      foreignKey: "tenant_id",
-      as: "users",
-    });
-  };
-
-  return Tenant;
 };

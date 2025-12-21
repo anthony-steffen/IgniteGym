@@ -1,7 +1,7 @@
 // backend/src/routes/index.ts
 import { Router } from "express";
 import usersRoutes from "./users.routes";
-import sessionsRoutes from "./sessions.routes";
+import authRoutes  from "../modules/auth/auth.routes";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
@@ -24,6 +24,6 @@ routes.get(
 
 // suas rotas reais
 routes.use("/users", usersRoutes);
-routes.use("/sessions", sessionsRoutes);
+routes.use("/auth", authRoutes);
 
 export default routes;
