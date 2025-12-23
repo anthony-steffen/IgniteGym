@@ -1,6 +1,6 @@
 import { sequelize } from "../sequelize";
-import { User } from "./User";
-import { Tenant } from "./Tenant";
+import {User} from "./user.model";
+import { Tenant } from "./tenant.model";
 
 export const models = {
   User,

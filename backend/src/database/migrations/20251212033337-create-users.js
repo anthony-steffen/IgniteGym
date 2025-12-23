@@ -71,6 +71,6 @@ module.exports = {
     // remover índice e tabela
     await queryInterface.removeIndex('users', 'users_tenant_email_unique');
     await queryInterface.dropTable('users');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";'); // em caso de Postgres, mas ok incluir
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";');
   }
 };
