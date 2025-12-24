@@ -1,13 +1,15 @@
 'use strict';
+// migrations/20220325162300-create-employees.js
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Employees', {
+    await queryInterface.createTable('employees', {
       id: {
         allowNull: false,
-        autoIncrement: true,
+        type: Sequelize.INTEGER,
+        allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        autoIncrement: true
       },
       tenant_id: {
         type: Sequelize.UUID
@@ -18,17 +20,23 @@ module.exports = {
       role_title: {
         type: Sequelize.STRING
       },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
+      is_active: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
       },
-      updatedAt: {
+      created_at: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      updated_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Employees');
+    await queryInterface.dropTable('employees');
   }
 };

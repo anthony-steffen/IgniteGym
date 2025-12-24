@@ -2,6 +2,7 @@
 import { Router } from "express";
 import usersRoutes from "./users.routes";
 import authRoutes  from "../modules/auth/auth.routes";
+import staffRoutes from "../modules/staff/staff.routes";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
@@ -25,5 +26,6 @@ routes.get(
 // suas rotas reais
 routes.use("/users", usersRoutes);
 routes.use("/auth", authRoutes);
+routes.use("/staff", staffRoutes);
 
 export default routes;

@@ -4,33 +4,39 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
+  Association,
 } from 'sequelize';
 import { sequelize } from '../sequelize';
+import { User } from './user.model';
 
 export class Employee extends Model<
-  InferAttributes<Employee>,
-  InferCreationAttributes<Employee>
+  InferAttributes<Employee, { omit: 'user' }>,
+  InferCreationAttributes<Employee, { omit: 'user' }>
 > {
   declare id: CreationOptional<string>;
   declare user_id: string;
-  declare tenant_id: string;
   declare role_title: string;
-  declare hire_date: Date | null;
-  declare permissions: Record<string, boolean> | null;
+  declare is_active: boolean;
+
+
+  // ✅ ASSOCIAÇÃO TIPADA
+  declare user?: NonAttribute<User>;
+
+  declare static associations: {
+    user: Association<Employee, User>;
+  };
 }
 
 Employee.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
+      allowNull: false,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true
     },
     user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    tenant_id: {
       type: DataTypes.UUID,
       allowNull: false,
     },
@@ -38,14 +44,10 @@ Employee.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    permissions: {
-      type: DataTypes.JSON,
-      allowNull: true,
-    },
-    hire_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    }
   },
   {
     sequelize,

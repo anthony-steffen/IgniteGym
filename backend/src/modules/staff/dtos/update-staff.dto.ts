@@ -2,6 +2,7 @@
 export interface UpdateStaffDTO {
   name?: string;
   phone?: string;
-  role?: "STAFF" | "MANAGER";
-  is_active?: boolean;
+  roleTitle?: string;
+  isActive?: boolean;
 }
+

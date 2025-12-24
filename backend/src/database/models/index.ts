@@ -1,18 +1,31 @@
-import { sequelize } from "../sequelize";
-import {User} from "./user.model";
-import { Tenant } from "./tenant.model";
-import { Employee } from "./employee.model";
+import { Sequelize } from 'sequelize';
+import { User } from './user.model';
+import { Tenant } from './tenant.model';
+import { Employee } from './employee.model';
 
-export const models = {
-  User,
-  Tenant,
-  Employee,
-};
+export function initModels(sequelize: Sequelize) {
+  // 🔗 TENANT → USERS
+  Tenant.hasMany(User, {
+    foreignKey: 'tenant_id',
+    as: 'users',
+  });
 
-export async function initModels() {
-  Object.values(models).forEach(model => {
-    if ((model as any).associate) {
-      (model as any).associate(models);
-    }
+  User.belongsTo(Tenant, {
+    foreignKey: 'tenant_id',
+    as: 'tenant',
+  });
+
+  // 🔗 USER → EMPLOYEE
+  User.hasOne(Employee, {
+    foreignKey: 'user_id',
+    as: 'employee',
+  });
+
+  Employee.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user',
   });
 }
+
+// export opcional para uso externo (tests, seeds, etc)
+export { User, Tenant, Employee };

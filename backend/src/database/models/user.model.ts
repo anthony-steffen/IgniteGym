@@ -4,12 +4,15 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
+  Association,
 } from 'sequelize';
 import { sequelize } from '../sequelize';
+import { Employee } from './employee.model';
 
 export class User extends Model<
-  InferAttributes<User>,
-  InferCreationAttributes<User>
+  InferAttributes<User, { omit: 'employee' }>,
+  InferCreationAttributes<User, { omit: 'employee' }>
 > {
   declare id: CreationOptional<string>;
   declare tenant_id: string;
@@ -21,6 +24,14 @@ export class User extends Model<
   declare phone: string | null;
   declare last_login_at: Date | null;
   declare is_active: CreationOptional<boolean>;
+
+  // ✅ ASSOCIAÇÃO TIPADA
+  declare employee?: NonAttribute<Employee>;
+
+  // (opcional, mas recomendado)
+  declare static associations: {
+    employee: Association<User, Employee>;
+  };
 }
 
 User.init(
