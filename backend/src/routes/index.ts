@@ -24,8 +24,8 @@ routes.get(
 );
 
 // suas rotas reais
-routes.use("/users", usersRoutes);
-routes.use("/auth", authRoutes);
-routes.use("/staff", staffRoutes);
+routes.use("/users", usersRoutes, authMiddleware);
+routes.use("/auth", authRoutes, authMiddleware);
+routes.use("/staff", staffRoutes, authMiddleware, roleMiddleware(["ADMIN"]));
 
 export default routes;

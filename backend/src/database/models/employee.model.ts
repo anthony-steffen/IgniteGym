@@ -31,10 +31,10 @@ export class Employee extends Model<
 Employee.init(
   {
     id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
     },
     user_id: {
       type: DataTypes.UUID,
