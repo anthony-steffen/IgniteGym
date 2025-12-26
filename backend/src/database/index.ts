@@ -15,7 +15,7 @@ export async function connectDatabase(
 
       // 🔑 REGRA DE OURO:
       // associações SÓ depois de autenticar
-      initModels(sequelize);
+      initModels();
 
       console.log('🧩 Models e associações inicializados!');
       return;

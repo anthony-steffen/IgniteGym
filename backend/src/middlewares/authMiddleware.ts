@@ -29,9 +29,10 @@ export function authMiddleware(
       authConfig.jwt.secret
     ) as TokenPayload;
 
+    // 🔑 CONTRATO ÚNICO DA API
     req.user = {
-      userId: decoded.userId,
-      tenantId: decoded.tenantId,
+      id: decoded.userId,        // ✅ PADRÃO
+      tenantId: decoded.tenantId, // ✅ camelCase
       role: decoded.role,
     };
 

@@ -16,7 +16,7 @@ export class User extends Model<
 > {
   declare id: CreationOptional<string>;
   declare tenant_id: string;
-  declare email: string;
+  declare email: string | null;
   declare password_hash: string;
   declare role: 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
 

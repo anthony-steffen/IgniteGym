@@ -3,6 +3,7 @@ import { Router } from "express";
 import usersRoutes from "./users.routes";
 import authRoutes  from "../modules/auth/auth.routes";
 import staffRoutes from "../modules/staff/staff.routes";
+import studentsRoutes from "../modules/student/student.routes";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
@@ -27,5 +28,6 @@ routes.get(
 routes.use("/users", usersRoutes, authMiddleware);
 routes.use("/auth", authRoutes, authMiddleware);
 routes.use("/staff", staffRoutes, authMiddleware, roleMiddleware(["ADMIN"]));
+routes.use("/students", studentsRoutes, authMiddleware);
 
 export default routes;
