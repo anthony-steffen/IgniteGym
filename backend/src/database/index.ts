@@ -1,6 +1,6 @@
 // src/database/index.ts
 import { sequelize } from './sequelize';
-import { initModels } from './models';
+import { setupAssociations } from './models/associations';
 
 export async function connectDatabase(
   retries = 10,
@@ -13,9 +13,7 @@ export async function connectDatabase(
       await sequelize.authenticate();
       console.log('🟢 Banco conectado com sucesso!');
 
-      // 🔑 REGRA DE OURO:
-      // associações SÓ depois de autenticar
-      initModels();
+      setupAssociations();
 
       console.log('🧩 Models e associações inicializados!');
       return;

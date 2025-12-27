@@ -4,6 +4,8 @@ import usersRoutes from "./users.routes";
 import authRoutes  from "../modules/auth/auth.routes";
 import staffRoutes from "../modules/staff/staff.routes";
 import studentsRoutes from "../modules/student/student.routes";
+import subscriptionsRoutes from "../modules/subscription/subscription.routes";
+
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
@@ -27,7 +29,8 @@ routes.get(
 // suas rotas reais
 routes.use("/users", usersRoutes, authMiddleware);
 routes.use("/auth", authRoutes, authMiddleware);
-routes.use("/staff", staffRoutes, authMiddleware, roleMiddleware(["ADMIN"]));
-routes.use("/students", studentsRoutes, authMiddleware);
+routes.use("/staff", staffRoutes);
+routes.use("/students", studentsRoutes);
+routes.use("/subscriptions", subscriptionsRoutes);
 
 export default routes;
