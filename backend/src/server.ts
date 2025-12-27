@@ -2,6 +2,7 @@
 import "./config/env"; // 🚨 PRIMEIRA LINHA
 import app from "./app";
 import { connectDatabase } from "./database";
+import { startSubscriptionExpirationJob } from "./jobs/subscription-expiration.job";
 
 
 async function bootstrap() {
@@ -9,6 +10,8 @@ async function bootstrap() {
   console.log("🌍 DATABASE_URL:", process.env.DATABASE_URL);
 
   await connectDatabase();
+
+  startSubscriptionExpirationJob();
 
   const port = Number(process.env.PORT);
   if (!port) {
