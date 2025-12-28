@@ -4,6 +4,7 @@ import { studentAssociations } from './student.associations';
 import { planAssociations } from './plan.associations';
 import { subscriptionAssociations } from './subscription.associations';
 import { checkinAssociations } from './checkin.assiciations';
+import { inventoryAssociations } from './inventory.associations';
 
 import { AssociationConfig } from './types';
 
@@ -14,6 +15,7 @@ export const associations: AssociationConfig[] = [
   ...planAssociations,
   ...subscriptionAssociations,
   ...checkinAssociations,
+  ...inventoryAssociations,
 ];
 
 export function setupAssociations() {
