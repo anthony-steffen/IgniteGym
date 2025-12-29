@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { InventoryController } from './inventory.controller';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 
-const inventoryRouter = Router();
+const router = Router();
+
+router.use(authMiddleware);
+
 const inventoryController = new InventoryController();
 
 // Rotas vinculadas ao tenantId para isolamento
-inventoryRouter.get('/:tenantId/products', inventoryController.listProducts);
-inventoryRouter.post('/:tenantId/products', inventoryController.createProduct);
-inventoryRouter.post('/:tenantId/products/:productId/stock', inventoryController.updateStock);
+router.get('/:tenantId/products', inventoryController.listProducts);
+router.post('/:tenantId/products', inventoryController.createProduct);
+router.post('/:tenantId/products/:productId/stock', inventoryController.updateStock);
 
-export { inventoryRouter };
+export default router ;
