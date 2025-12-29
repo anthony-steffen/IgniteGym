@@ -7,6 +7,7 @@ import studentsRoutes from "../modules/student/student.routes";
 import subscriptionsRoutes from "../modules/subscription/subscription.routes";
 import plansRoutes from "../modules/plan/plan.routes";
 import checkinRoutes from "../modules/checkin/checkin.routes";
+import { inventoryRouter } from "../modules/inventory/inventory.routes";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
@@ -36,5 +37,6 @@ routes.use("/students", studentsRoutes);
 routes.use("/subscriptions", subscriptionsRoutes);
 routes.use("/plans", plansRoutes);
 routes.use("/checkins", checkinRoutes);
+routes.use("/inventory", inventoryRouter);
 
 export default routes;
