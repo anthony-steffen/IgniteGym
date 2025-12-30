@@ -16,7 +16,7 @@ module.exports = {
       employee_id: {
         type: Sequelize.UUID,
         allowNull: false,
-        references: { model: 'users', key: 'id' }
+        references: { model: 'employees', key: 'id' }
       },
       total_value: { type: Sequelize.DECIMAL(10, 2), allowNull: false },
       payment_method: {

@@ -33,7 +33,7 @@ export class SubscriptionController {
       studentId,
       tenantId
     );
-
+    
     return res.json(subscriptions);
   }
 

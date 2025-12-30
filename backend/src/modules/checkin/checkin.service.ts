@@ -5,7 +5,7 @@ import { Student } from '../../database/models/student.model';
 import { Subscription } from '../../database/models/subscription.model';
 
 export class CheckInService {
-  static async create(tenantId: string, studentId: string) {
+  async create(tenantId: string, studentId: string) {
     // 1️⃣ valida aluno
     const student = await Student.findOne({
       where: { id: studentId, tenant_id: tenantId, is_active: true },
@@ -60,7 +60,7 @@ export class CheckInService {
     });
   }
 
-  static async listByStudent(tenantId: string, studentId: string) {
+  async listByStudent(tenantId: string, studentId: string) {
     return CheckIn.findAll({
       where: { tenant_id: tenantId, student_id: studentId },
       order: [['checked_in_at', 'DESC']],

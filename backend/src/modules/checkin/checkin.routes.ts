@@ -5,9 +5,12 @@ import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = Router();
 
+const checkInController = new CheckInController();
+
 router.use(authMiddleware);
 
-router.post('/', CheckInController.create);
-router.get('/student/:studentId', CheckInController.listByStudent);
+router.post('/', checkInController.create);
+router.get('/student/:studentId', checkInController.listByStudent);
 
 export default router;
+ 
