@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@plugin "daisyui";
+/* @import "tailwindcss";
+@plugin "daisyui"; */
 
 /* TEMA LIGHT (CORPORATE) CUSTOMIZADO */
-@plugin "daisyui/theme" {
+/* @plugin "daisyui/theme" {
   name: "corporate";
   default: true;
   prefersdark: false;
@@ -35,10 +35,10 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
-}
+} */
 
 /* TEMA DARK CUSTOMIZADO */
-@plugin "daisyui/theme" {
+/* @plugin "daisyui/theme" {
   name: "dark";
   default: false;
   prefersdark: false;
@@ -71,10 +71,10 @@
   --border: 2px;
   --depth: 1;
   --noise: 0;
-}
+} */
 
 
-[data-theme="dark"] .text-primary {
+/* [data-theme="dark"] .text-primary {
   color: #e7e7e7;
   font-weight: 500;
 }
@@ -82,4 +82,4 @@
 [data-theme="dark"] .text-secondary {
   color: #06f1b3;
   font-weight: 500;
-}
+} */

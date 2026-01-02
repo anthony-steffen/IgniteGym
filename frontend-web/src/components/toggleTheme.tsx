@@ -18,15 +18,17 @@ export default function ThemeToggle() {
   };
 
   return (
-    <button 
-      onClick={toggleTheme} 
-      className="btn btn-ghost btn-circle"
-    >
-      {theme === 'corporate' ? (
-        <Moon className="w-6 h-6" />
-      ) : (
-        <Sun className="w-6 h-6 text-yellow-400" />
-      )}
-    </button>
+    <div className= "absolute right-2 top-2 z-50 flex items-center justify-center">
+      <button 
+        onClick={toggleTheme} 
+        className="btn btn-ghost btn-circle"
+      >
+        {theme === 'corporate' ? (
+          <Moon className="w-6 h-6" />
+        ) : (
+          <Sun className="w-6 h-6 text-yellow-400" />
+        )}
+      </button>
+    </div>
   );
 }

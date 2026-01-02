@@ -1,50 +1,49 @@
+import { sequelize } from '../../database/sequelize';
 import { Student } from '../../database/models/student.model';
 import { User } from '../../database/models/user.model';
-
-interface CreateStudentInput {
-  tenantId: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  birth_date?: Date;
-}
+import { CreateStudentDTO } from './dtos/create-student.dto';
+import { AppError } from '../../errors/AppError';
 
 export class StudentService {
-  static async create(data: CreateStudentInput) {
-    // 1️⃣ evita duplicidade por email no tenant
+  static async create(data: CreateStudentDTO) {
+    // 1️⃣ Evita duplicidade por email
     if (data.email) {
       const exists = await User.findOne({
-        where: {
-          tenant_id: data.tenantId,
-          email: data.email,
-        },
+        where: { email: data.email },
       });
 
       if (exists) {
-        throw new Error('Email já cadastrado neste tenant');
+        throw new AppError('Este e-mail já está em uso por outro usuário.', 409);
       }
     }
 
-    // 2️⃣ cria usuário
-    const user = await User.create({
-      tenant_id: data.tenantId,
-      email: data.email ?? null,
-      role: 'STUDENT',
-      name: data.name,
-      phone: data.phone ?? null,
-      password_hash: 'TEMP', // depois será ajustado
-      is_active: true,
-    });
+    try {
+      // 2️⃣ Transação para garantir que User e Student existam juntos
+      return await sequelize.transaction(async (t) => {
+        const user = await User.create({
+          tenant_id: data.tenantId,
+          email: data.email ?? null,
+          role: 'STUDENT',
+          name: data.name,
+          phone: data.phone ?? null,
+          password_hash: 'TEMP', // Recomendado: Gerar um hash aleatório aqui
+          is_active: true,
+        }, { transaction: t });
 
-    // 3️⃣ cria student
-    const student = await Student.create({
-      user_id: user.id,
-      tenant_id: data.tenantId,
-      birth_date: data.birth_date ?? null,
-      is_active: true,
-    });
+        const student = await Student.create({
+          user_id: user.id,
+          tenant_id: data.tenantId,
+          birth_date: data.birth_date ?? null,
+          is_active: true,
+        }, { transaction: t });
 
-    return { user, student };
+        return { user, student };
+      });
+    } catch (error: any) {
+      if (error instanceof AppError) throw error;
+      console.error('❌ Erro ao criar aluno:', error);
+      throw new AppError('Erro ao processar o cadastro do aluno.', 500);
+    }
   }
 
   static async list(tenantId: string) {
@@ -57,6 +56,7 @@ export class StudentService {
           attributes: ['id', 'name', 'email', 'phone', 'is_active'],
         },
       ],
+      order: [[ { model: User, as: 'user' }, 'name', 'ASC']] // Ordenar por nome do usuário
     });
   }
 
@@ -66,12 +66,22 @@ export class StudentService {
     });
 
     if (!student) {
-      throw new Error('Aluno não encontrado');
+      throw new AppError('Aluno não encontrado para desativação.', 404);
     }
 
-    student.is_active = false;
-    await student.save();
+    try {
+      student.is_active = false;
+      await student.save();
 
-    return student;
+      // Opcional: Desativar também o acesso do usuário
+      await User.update(
+        { is_active: false },
+        { where: { id: student.user_id } }
+      );
+
+      return student;
+    } catch (error) {
+      throw new AppError('Erro ao tentar desativar o registro do aluno.', 500);
+    }
   }
 }
