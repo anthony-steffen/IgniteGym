@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import { api } from '../../../services/api';
+import { Link } from 'react-router-dom';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -30,83 +31,55 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex justify-center p-4 bg-base-200">
-      <div className="card h-min w-full max-w-sm shadow-xl bg-base-100 border-2 border-base-300 my-10">
-        <form onSubmit={handleSubmit} className="card-body">
-          <h2 className="text-2xl font-bold text-center text-primary">Ignite Gym</h2>
-          <p className="text-center text-base-content/60">Faça login para continuar</p>
-          
-          <label className="input validator my-2">
-            <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <g
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                fill="none"
-                stroke="currentColor"
-              >
-                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-              </g>
-            </svg>
-            <input 
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="mail@email.com" 
-            required 
-            />
-          </label>
-          <div className="validator-hint hidden">Enter valid email address</div>
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden">
 
-          <label className="input validator">
-              <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <g
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  strokeWidth="2.5"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"
-                  ></path>
-                  <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
-                </g>
-              </svg>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="Password"
-                minLength= {8}
-                // pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
-              />
-            </label>
-            <p className="validator-hint hidden">
-              Must be more than 8 characters, including
-              <br />At least one number <br />At least one lowercase letter <br />At least one uppercase letter
-            </p>
-          {/* <div className="form-control">
-            <label className="label">
-              <span className="label-text text-base-content">Senha</span>
-            </label>
-            <input 
-              type="password" 
-              placeholder="******" 
-              className="input input-bordered" 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required 
-            />
-          </div> */}
+      {/* Lógica de Imagem Limpa e Eficaz */}
+      <picture className="absolute inset-0 w-full h-full">
+        {/* Se a tela for maior que 768px, carrega a Wide */}
+        <source media="(min-width: 768px)" srcSet="/photo-1.jpg" />
+        {/* Caso contrário (mobile), carrega a Vertical */}
+        <img 
+          src="/photo-1.jpg" 
+          alt="Background" 
+          className="w-full h-full object-cover object-[center_5%]" 
+        />
+      </picture>
 
-          <div className="form-control mt-6 m-auto">
-            <button type="submit" className="btn btn-primary w-full" >Entrar</button>
-          </div>
-        </form>
+      {/* Camada de escurecimento e desfoque */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+      <div className="relative z-10 w-full max-w-md p-8">
+        <div className="card bg-black/40  border border-white/20 shadow-2xl"> 
+          <form onSubmit={handleSubmit} className="card-body p-8">
+
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-black text-primary tracking-tighter italic">IGNITE<span className="text-white font-bold">GYM</span></h1>
+              <p className="text-gray-200 text-sm mt-2">Treine sua mente, transforme seu corpo.</p>
+            </div>
+
+            <div className="form-control flex flex-col gap-2">
+              <label className="input input-bordered bg-white/90 flex items-center gap-2 text-black font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 opacity-70"><path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z" /><path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" /></svg>
+                <input type="email" className="grow" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} required />
+              </label>
+
+              <label className="input input-bordered bg-white/100 flex items-center gap-2 text-black font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 opacity-70"><path fillRule="evenodd" d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z" clipRule="evenodd" /></svg>
+                <input type="password" className="grow" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} required />
+              </label>
+            </div>
+
+            <button type="submit" className={`btn btn-primary w-full mt-6 font-bold uppercase ${loading ? 'loading' : ''}`}>
+              Entrar na conta
+            </button>
+
+            <div className="mt-2 text-center">
+              <p className="divider text-gray-400 text-sm">Não tem acesso?</p>
+              <Link to="/register" className="text-blue-800 font-bold hover:underline transition-all">
+                Crie uma conta para sua academia
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

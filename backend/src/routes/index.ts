@@ -11,30 +11,14 @@ import checkinRoutes from "../modules/checkin/checkin.routes";
 import inventoryRouter  from "../modules/inventory/inventory.routes";
 import salesRouter from "../modules/sale/sales.routes";
 
-import { authMiddleware } from "../middlewares/authMiddleware";
-import { roleMiddleware } from "../middlewares/roleMiddleware";
-
 const routes = Router();
 
-// health check (OBRIGATÓRIO para Railway)
-routes.get("/health", (_, res) => {
-  return res.status(200).json({ status: "ok" });
-});
+routes.get("/health", (_, res) => res.status(200).json({ status: "ok" }));
 
-// Teste para RoleMiddleware
-routes.get(
-  "/admin-only",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  (_, res) => {
-    res.json({ message: "Esse usuário tem permissão de admin" });
-  }
-);
-
-// suas rotas reais
-routes.use("/users", usersRoutes, authMiddleware);
-routes.use("/auth", authRoutes, authMiddleware);
-routes.use("/staff", staffRoutes);
+// Rotas limpas: O arquivo de destino decide se é público ou privado
+routes.use("/auth", authRoutes);     // O auth.routes deve ser público para login
+routes.use("/staff", staffRoutes);   // O staff.routes agora tem o POST público
+routes.use("/users", usersRoutes);
 routes.use("/employees", employeeRouter);
 routes.use("/students", studentsRoutes);
 routes.use("/subscriptions", subscriptionsRoutes);

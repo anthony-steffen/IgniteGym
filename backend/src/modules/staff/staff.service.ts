@@ -1,13 +1,18 @@
 import { sequelize } from '../../database/sequelize';
 import { User } from '../../database/models/user.model';
 import { Employee } from '../../database/models/employee.model';
+import { Tenant } from '../../database/models/tenant.model'; // Certifique-se de que este model existe
 import { CreateStaffDTO } from './dtos/create-staff.dto';
 import { UpdateStaffDTO } from './dtos/update-staff.dto';
 import bcrypt from 'bcrypt';
 import { AppError } from '../../errors/AppError';
 
 export class StaffService {
-  static async create(data: CreateStaffDTO) {
+  /**
+   * CRIAÇÃO DE STAFF / AUTO-REGISTRO
+   * Suporta criação de nova academia (Tenant) ou vínculo a uma existente.
+   */
+  static async create(data: CreateStaffDTO & { gymName?: string }) {
     const {
       tenantId,
       email,
@@ -15,52 +20,81 @@ export class StaffService {
       name,
       phone,
       roleTitle,
+      gymName,
     } = data;
 
-    // 1️⃣ Verifica se e-mail já está em uso (Geral ou no Tenant)
-    const existingUser = await User.findOne({
-      where: { email },
-    });
-
+    // 1️⃣ Validação de e-mail global
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       throw new AppError('Este e-mail já está cadastrado no sistema.', 409);
     }
 
-    // 2️⃣ Usamos Transação para garantir integridade (User + Employee)
     try {
       return await sequelize.transaction(async (t) => {
+        let finalTenantId = tenantId;
+
+        // 2️⃣ Lógica de Auto-Registro (Criação de Tenant)
+        // Se não houver tenantId mas houver gymName, estamos criando uma nova academia
+        if (!finalTenantId && gymName) {
+          const newTenant = await Tenant.create({
+            name: gymName,
+            slug: gymName.toLowerCase().trim().replace(/\s+/g, '-'),
+            is_active: true,
+            timezone: 'UTC',
+          }, { transaction: t });
+          
+          finalTenantId = newTenant.id;
+        }
+
+        // Se após a checagem ainda não tivermos um ID, o request é inválido
+        if (!finalTenantId) {
+          throw new AppError('ID da academia não fornecido ou nome da academia ausente.', 400);
+        }
+
+        // 3️⃣ Definição de Role
+        // Se o usuário está criando a academia (gymName presente), ele é ADMIN.
+        // Se está sendo criado dentro de uma academia (tenantId presente), ele é STAFF.
+        const userRole = gymName ? 'ADMIN' : 'STAFF';
+
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // 4️⃣ Criação do Usuário
         const user = await User.create({
-          tenant_id: tenantId,
+          tenant_id: finalTenantId,
           email,
           password_hash: passwordHash,
-          role: 'STAFF',
+          role: userRole,
           name: name ?? null,
           phone: phone ?? null,
+          is_active: true
         }, { transaction: t });
 
+        // 5️⃣ Criação do Perfil de Funcionário (Employee)
         await Employee.create({
           user_id: user.id,
-          role_title: roleTitle,
+          tenant_id: finalTenantId,
+          role_title: roleTitle || (gymName ? 'Proprietário' : 'Funcionário'),
           is_active: true,
-          tenant_id: tenantId,
         }, { transaction: t });
 
         return user;
       });
     } catch (error: any) {
       if (error instanceof AppError) throw error;
-      console.error('❌ Erro ao criar staff:', error);
-      throw new AppError('Erro ao processar criação de funcionário.', 500);
+      console.error('❌ Erro ao processar criação:', error);
+      throw new AppError('Erro ao processar criação de conta/academia.', 500);
     }
   }
 
+  /**
+   * LISTAGEM POR TENANT
+   */
   static async list(tenantId: string) {
     return User.findAll({
       where: {
         tenant_id: tenantId,
-        role: 'STAFF',
+        // Lista todos que não são alunos (Staff, Managers, Admins)
+        role: ['STAFF', 'MANAGER', 'ADMIN'],
       },
       include: [
         {
@@ -68,21 +102,28 @@ export class StaffService {
           as: 'employee',
         },
       ],
+      order: [['name', 'ASC']]
     });
   }
 
-  static async findOne(employeeId: string) {
-    const employee = await Employee.findByPk(employeeId, {
-      include: [{ model: User, as: 'user' }],
+  /**
+   * BUSCA DETALHADA
+   */
+  static async findOne(userId: string) {
+    const user = await User.findByPk(userId, {
+      include: [{ model: Employee, as: 'employee' }],
     });
 
-    if (!employee) {
-      throw new AppError('Membro da equipe (Staff) não encontrado.', 404);
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404);
     }
 
-    return employee;
+    return user;
   }
 
+  /**
+   * ATUALIZAÇÃO DE DADOS
+   */
   static async update(userId: string, data: UpdateStaffDTO) {
     const user = await User.findByPk(userId, {
       include: [{ model: Employee, as: 'employee' }],
@@ -96,7 +137,6 @@ export class StaffService {
       await user.update({
         name: data.name ?? user.name,
         phone: data.phone ?? user.phone,
-        // is_active geralmente fica no model Employee ou User, ajuste conforme seu banco
       });
 
       if (data.roleTitle && user.employee) {
@@ -107,24 +147,27 @@ export class StaffService {
 
       return user;
     } catch (error) {
-      throw new AppError('Erro ao atualizar os dados do staff.', 500);
+      throw new AppError('Erro ao atualizar os dados.', 500);
     }
   }
 
+  /**
+   * DESATIVAÇÃO (Soft Delete)
+   */
   static async deactivate(userId: string) {
     const user = await User.findByPk(userId, {
       include: [{ model: Employee, as: 'employee' }],
     });
 
     if (!user) {
-      throw new AppError('Staff não encontrado para desativação.', 404);
+      throw new AppError('Membro não encontrado para desativação.', 404);
     }
 
-    if (user.employee) {
-      await user.employee.update({ is_active: false });
-    }
-    
-    // Opcional: desativar o acesso do usuário também
-    await user.update({ is_active: false }); 
+    return await sequelize.transaction(async (t) => {
+      if (user.employee) {
+        await user.employee.update({ is_active: false }, { transaction: t });
+      }
+      await user.update({ is_active: false }, { transaction: t });
+    });
   }
 }
