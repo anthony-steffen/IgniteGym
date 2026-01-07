@@ -84,4 +84,68 @@ export class StudentService {
       throw new AppError('Erro ao tentar desativar o registro do aluno.', 500);
     }
   }
+
+  // Metodo para atualizar o registro do aluno
+  static async update(studentId: string, tenantId: string, data: Partial<CreateStudentDTO>) {
+  // 📝 LOG DE BUSCA
+  console.log('=== [DEBUG SERVICE] ===');
+  console.log(`Buscando Aluno: ${studentId} para o Tenant: ${tenantId}`);
+
+  const student = await Student.findOne({
+    where: { 
+      user_id: studentId, 
+      tenant_id: tenantId 
+    },
+    include: [{ model: User, as: 'user' }]
+  });
+
+  if (!student) {
+    // 📝 LOG DE FALHA NA BUSCA
+    console.warn(`⚠️ Aluno ${studentId} NÃO encontrado no banco para o Tenant ${tenantId}`);
+    
+    // Teste extra: O aluno existe mas em outro tenant?
+    const existAnywhere = await Student.findByPk(studentId);
+    if (existAnywhere) {
+      console.log(`💡 O aluno existe, mas pertence ao Tenant: ${existAnywhere.tenant_id}`);
+    } else {
+      console.log(`❌ O ID ${studentId} não existe em nenhum registro da tabela Student.`);
+    }
+
+    throw new AppError('Aluno não encontrado.', 404);
+  }
+
+  console.log('✅ Aluno localizado! Iniciando transação de update...');
+
+  // Validação de e-mail duplicado (se estiver tentando mudar o e-mail)
+  if (data.email && data.email !== student.user?.email) {
+    const emailExists = await User.findOne({ where: { email: data.email } });
+    if (emailExists) {
+      throw new AppError('Este e-mail já está em uso.', 409);
+    }
+  }
+
+  try {
+    return await sequelize.transaction(async (t) => {
+      // Atualiza dados na tabela User
+      await User.update({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+      }, { 
+        where: { id: student.user_id },
+        transaction: t 
+      });
+
+      // Atualiza dados na tabela Student
+      await student.update({
+        birth_date: data.birth_date,
+      }, { transaction: t });
+
+      return { message: 'Dados atualizados com sucesso.' };
+    });
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError('Erro ao atualizar dados do aluno.', 500);
+  }
+}
 }

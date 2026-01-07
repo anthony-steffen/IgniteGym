@@ -10,34 +10,28 @@ interface TokenPayload {
   exp: number;
 }
 
-export function authMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(401).json({ message: 'Token não fornecido' });
-  }
+  if (!authHeader) return res.status(401).json({ message: 'Token não fornecido' });
 
   const [, token] = authHeader.split(' ');
 
   try {
-    const decoded = jwt.verify(
-      token,
-      authConfig.jwt.secret
-    ) as TokenPayload;
+    const decoded = jwt.verify(token, authConfig.jwt.secret) as TokenPayload;
 
-    // 🔑 CONTRATO ÚNICO DA API
+    // 🚨 ADICIONE ESTAS LINHAS ABAIXO:
     req.user = {
-      id: decoded.userId,        // ✅ PADRÃO
-      tenantId: decoded.tenantId, // ✅ camelCase
+      id: decoded.userId,
+      tenantId: decoded.tenantId,
       role: decoded.role,
     };
 
-    return next();
-  } catch {
+    return next(); // 🚀 ESSENCIAL: Permite que a requisição chegue ao Controller
+    // ----------------------------
+
+  } catch (err) {
+    console.log('❌ [DEBUG] Erro JWT:', err instanceof Error ? err.message : 'Unknown error'); 
     return res.status(401).json({ message: 'Token inválido' });
   }
 }

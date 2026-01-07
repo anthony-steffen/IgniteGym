@@ -9,5 +9,6 @@ router.use(authMiddleware);
 router.post('/', StudentController.create);
 router.get('/', StudentController.list);
 router.patch('/:id/deactivate', StudentController.deactivate);
+router.put('/:id', StudentController.update);
 
 export default router;
