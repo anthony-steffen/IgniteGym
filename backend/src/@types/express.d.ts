@@ -1,3 +1,4 @@
+// src/@types/express.d.ts
 import 'express';
 
 declare global {
@@ -9,7 +10,7 @@ declare global {
     }
 
     interface Request {
-      user?: User;
+      user: User;
     }
   }
 }

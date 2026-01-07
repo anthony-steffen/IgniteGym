@@ -1,16 +1,19 @@
 import { Router } from 'express';
 import { InventoryController } from './inventory.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
+import { roleMiddleware } from '../../middlewares/roleMiddleware';
 
 const router = Router();
-
-router.use(authMiddleware);
-
 const inventoryController = new InventoryController();
 
-// Rotas vinculadas ao tenantId para isolamento
-router.get('/:tenantId/products', inventoryController.listProducts);
-router.post('/:tenantId/products', inventoryController.createProduct);
-router.post('/:tenantId/products/:productId/stock', inventoryController.updateStock);
+// Todas as rotas de inventário exigem autenticação
+router.use(authMiddleware);
 
-export default router ;
+// Listagem e Criação (Apenas STAFF, MANAGER e ADMIN)
+router.get('/products', inventoryController.listProducts);
+router.post('/products', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), inventoryController.createProduct);
+
+// Movimentação de estoque específica
+router.post('/products/:productId/stock', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), inventoryController.updateStock);
+
+export default router;

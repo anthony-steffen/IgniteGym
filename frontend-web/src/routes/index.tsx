@@ -6,6 +6,7 @@ import { LoginPage } from '../modules/auth/pages/LoginPage';
 import { RegisterPage } from '../modules/auth/pages/RegisterPage'; 
 import { PlanPage } from '../modules/plan/pages/PlanPage';
 import { StudentPage } from '../modules/student/pages/StudentPage';
+import { ProductPage } from '../modules/product/pages/ProductPage';
 
 import { HomePage } from '../modules/home/pages/HomePage';
 import { MainLayout } from '../shared/Mainlayout';
@@ -25,11 +26,11 @@ export function AppRoutes() {
         <Route path="home" element={<HomePage />} />
         <Route path="plans" element={<PlanPage />} />
         <Route path="students" element={<StudentPage />} />
+        <Route path="products" element={<ProductPage />} />
         
         {/* Estrutura preparada para os novos módulos */}
         <Route path="checkin" element={<div className="p-4">Dashboard Check-in em breve...</div>} />
         <Route path="employee" element={<div className="p-4">Dashboard Funcionários em breve...</div>} />
-        <Route path="products" element={<div className="p-4">Dashboard Inventário em breve...</div>} />
         <Route path="sales" element={<div className="p-4">Dashboard Vendas em breve...</div>} />
         <Route path="subscriptions" element={<div className="p-4">Dashboard Inscrições em breve...</div>} />
         <Route path="settings" element={<div className="p-4">Configurações em breve...</div>} />
