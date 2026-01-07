@@ -16,3 +16,18 @@ export const sequelize = process.env.DATABASE_URL
         logging: false,
       }
     );
+
+    // Adicione isso logo após a conexão
+async function testConnection() {
+  try {
+    await sequelize.authenticate();
+    console.log('🟢 [DEBUG] Conexão ativa. Testando consulta...');
+    
+    // Testa uma consulta simples
+    const result = await sequelize.query('SELECT 1 + 1 AS result');
+    console.log('✅ [DEBUG] Banco respondeu:', result[0]);
+  } catch (error) {
+    console.error('🔴 [DEBUG] FALHA CRÍTICA NO BANCO:', error);
+  }
+}
+testConnection();

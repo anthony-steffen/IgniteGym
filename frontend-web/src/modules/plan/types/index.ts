@@ -5,3 +5,9 @@ export interface Plan {
   price: number;
   created_at?: string;
 }
+
+export interface PlanFormData {
+  name: string;
+  duration_days: number;
+  price: number;
+}

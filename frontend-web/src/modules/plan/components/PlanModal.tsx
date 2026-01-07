@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import type { Plan } from '../types/index';
+import type { Plan, PlanFormData } from '../types/index';
 
 interface PlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Plan | Omit<Plan, 'id'>) => void;
+  onSave: (data: PlanFormData) => void;
   selectedPlan: Plan | null;
 }
 
 export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalProps) {
-  // O estado é inicializado diretamente. 
-  // O reset ocorrerá via 'key' no componente pai.
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PlanFormData>({
     name: selectedPlan?.name ?? '',
-    duration_days: selectedPlan?.duration_days ?? 30,
-    price: selectedPlan?.price ?? 0
+    duration_days: selectedPlan?.duration_days ?? 0,
+    price: selectedPlan?.price ?? 0,
   });
 
   if (!isOpen) return null;

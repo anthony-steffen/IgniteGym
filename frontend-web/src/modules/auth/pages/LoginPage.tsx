@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import { api } from '../../../services/api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,6 +22,8 @@ export function LoginPage() {
 
       // Chama o signIn do contexto para salvar no localStorage e no estado
       signIn(token, user);
+
+      navigate('/home');
       
     } catch (err) {
       console.error(err);
