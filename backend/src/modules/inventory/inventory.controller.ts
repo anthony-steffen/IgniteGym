@@ -4,36 +4,39 @@ import { InventoryService } from './inventory.service';
 const inventoryService = new InventoryService();
 
 export class InventoryController {
-  // Arrow functions garantem que o 'this' não se perca e simplificam o uso no Router
-  createProduct = async (req: Request, res: Response) => {
-    const { tenantId } = req.user; // Extraído do authMiddleware (Token)
+  listProducts = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
+    const products = await inventoryService.listProducts(tenantId);
+    return res.json(products);
+  };
 
+  createProduct = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
     const product = await inventoryService.createProduct({
       ...req.body,
       tenantId
     });
-
     return res.status(201).json(product);
-  }
+  };
 
-  updateStock = async (req: Request, res: Response) => {
-    const { tenantId } = req.user;
-    const { productId } = req.params;
+  updateProduct = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
+    const { id: productId } = req.params;
 
-    const movement = await inventoryService.updateStock({
+    const product = await inventoryService.updateProduct({
       ...req.body,
       tenantId,
       productId
     });
 
-    return res.json(movement);
-  }
+    return res.json(product);
+  };
 
-  listProducts = async (req: Request, res: Response) => {
-    const { tenantId } = req.user;
-    
-    const products = await inventoryService.listProducts(tenantId);
-    
-    return res.json(products);
-  }
+  deleteProduct = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
+    const { id: productId } = req.params;
+
+    await inventoryService.removeProduct(tenantId, productId);
+    return res.status(204).send();
+  };
 }

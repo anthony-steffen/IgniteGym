@@ -9,6 +9,7 @@ import subscriptionsRoutes from "../modules/subscription/subscription.routes";
 import plansRoutes from "../modules/plan/plan.routes";
 import checkinRoutes from "../modules/checkin/checkin.routes";
 import inventoryRouter  from "../modules/inventory/inventory.routes";
+import categoryRouter from "../modules/inventory/category.routes";
 import salesRouter from "../modules/sale/sales.routes";
 
 const routes = Router();
@@ -25,6 +26,7 @@ routes.use("/subscriptions", subscriptionsRoutes);
 routes.use("/plans", plansRoutes);
 routes.use("/checkins", checkinRoutes);
 routes.use("/inventory", inventoryRouter);
+routes.use("/categories", categoryRouter);
 routes.use("/sales", salesRouter);
 
 export default routes;

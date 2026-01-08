@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useInventory } from '../../../hooks/useInventory';
 import type { Product } from '../types';
-import { ProductModal } from '../components/ProductModal';
+import { ProductModal } from '../components/ProductMdal';
 
 export function ProductPage() {
   const { products, isLoading, deleteProduct } = useInventory();

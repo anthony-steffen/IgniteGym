@@ -1,10 +1,21 @@
+// Tipos para a rota /inventory/products
 export interface CreateProductDTO {
   tenantId: string;
-  categoryId: string;
+  category_id: string;
   name: string;
   description?: string;
   price: number;
   initialStock?: number;
+}
+
+export interface UpdateProductDTO {
+  tenantId: string;
+  productId: string;
+  category_id?: string;
+  name?: string;
+  price?: number;
+  description?: string;
+  is_active?: boolean;
 }
 
 export interface UpdateStockDTO {
@@ -18,4 +29,19 @@ export interface UpdateStockDTO {
 export interface RemoveProductDTO {
   tenantId: string;
   productId: string;
+}
+
+// Tipos para a rota /categories
+
+export interface CreateCategoryDTO {
+  name: string;
+}
+
+export interface UpdateCategoryDTO {
+  id: string;
+  name: string;
+}
+
+export interface ListCategoryDTO {
+  name?: string;
 }

@@ -2,22 +2,20 @@ import { sequelize } from '../../database/sequelize';
 import { Product } from '../../database/models/product.model';
 import { StockMovement } from '../../database/models/stock-moviments.model';
 import { Category } from '../../database/models/category.model';
-import { CreateProductDTO, UpdateStockDTO } from './dtos/inventory.dto';
+import { CreateProductDTO, UpdateProductDTO } from './dtos/inventory.dto';
 import { AppError } from '../../errors/AppError';
 
 export class InventoryService {
   async createProduct(data: CreateProductDTO) {
-    const { tenantId, categoryId, name, price, description, initialStock = 0 } = data;
+    const { tenantId, category_id, name, price, description, initialStock = 0 } = data;
 
-    const category = await Category.findByPk(categoryId);
-    if (!category) {
-      throw new AppError('A categoria selecionada não existe.', 404);
-    }
+    const category = await Category.findByPk(category_id);
+    if (!category) throw new AppError('A categoria selecionada não existe.', 404);
 
     return await sequelize.transaction(async (t) => {
       const product = await Product.create({
         tenant_id: tenantId,
-        category_id: categoryId,
+        category_id,
         name,
         price,
         description,
@@ -33,47 +31,45 @@ export class InventoryService {
           reason: 'Carga inicial de estoque'
         }, { transaction: t });
       }
-
       return product;
     });
   }
 
-  async updateStock(data: UpdateStockDTO) {
-    const { tenantId, productId, quantity, type, reason } = data;
+  async updateProduct(data: UpdateProductDTO) {
+    const { tenantId, productId, ...updateData } = data;
 
     const product = await Product.findOne({
       where: { id: productId, tenant_id: tenantId }
     });
 
-    if (!product) {
-      throw new AppError('Produto não encontrado.', 404);
+    if (!product) throw new AppError('Produto não encontrado.', 404);
+
+    if (updateData.category_id) {
+      const category = await Category.findByPk(updateData.category_id);
+      if (!category) throw new AppError('Nova categoria inválida.', 404);
     }
 
-    return await sequelize.transaction(async (t) => {
-      await StockMovement.create({
-        tenant_id: tenantId,
-        product_id: productId,
-        quantity,
-        type,
-        reason
-      }, { transaction: t });
+    return await product.update(updateData);
+  }
 
-      // Calcula novo saldo
-      const adjustment = type === 'INPUT' ? quantity : -quantity;
-      product.stock_quantity += adjustment;
-
-      if (product.stock_quantity < 0) {
-        throw new AppError('Estoque insuficiente para realizar esta saída.', 400);
-      }
-
-      await product.save({ transaction: t });
-      return product;
+  async removeProduct(tenantId: string, productId: string) {
+    const product = await Product.findOne({
+      where: { id: productId, tenant_id: tenantId }
     });
+
+    if (!product) throw new AppError('Produto não encontrado.', 404);
+    
+    // Regra: Não remove se houver estoque (opcional, conforme seu service original)
+    if (product.stock_quantity > 0) {
+      throw new AppError('Não é possível remover produto com saldo em estoque.', 400);
+    }
+
+    await product.destroy();
   }
 
   async listProducts(tenantId: string) {
     return Product.findAll({
-      where: { tenant_id: tenantId, is_active: true },
+      where: { tenant_id: tenantId },
       include: [{ association: 'category', attributes: ['name'] }],
       order: [['name', 'ASC']]
     });

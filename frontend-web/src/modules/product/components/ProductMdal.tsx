@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Product, CreateProductData } from '../types';
 import { useInventory } from '../../../hooks/useInventory';
@@ -11,7 +11,7 @@ interface ProductModalProps {
 
 export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
   const { register, handleSubmit, reset } = useForm<CreateProductData>();
-  const { createProduct, updateProduct, isSaving } = useInventory();
+  const { createProduct, updateProduct, categories, isSaving } = useInventory();
 
   useEffect(() => {
     if (isOpen) {
@@ -30,14 +30,20 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
 
   const onSubmit = async (data: CreateProductData) => {
     try {
+      const payload = {
+        ...data,
+        price: Number(data.price),
+        initialStock: Number(data.initialStock || 0)
+      };
+      
       if (product) {
-        await updateProduct({ id: product.id, ...data });
+        await updateProduct({ id: product.id, ...payload });
       } else {
-        await createProduct(data);
+        await createProduct(payload);
       }
       onClose();
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar produto:", error);
     }
   };
 
@@ -45,25 +51,97 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box bg-white border border-gray-200">
-        <h3 className="font-black italic uppercase text-lg mb-4 text-black">
-          {product ? 'Editar Produto' : 'Novo Produto'}
-        </h3>
+      <div className="modal-box bg-white border border-gray-200 shadow-2xl max-w-lg">
+        <header className="mb-6">
+          <h3 className="font-black italic uppercase text-2xl text-primary">
+            {product ? '📝 Editar Produto' : '🚀 Novo Item'}
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+            Sincronizado com Banco de Dados Central
+          </p>
+        </header>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <input {...register('name')} className="input input-bordered w-full bg-gray-50 text-black" placeholder="Nome" required />
-          <div className="grid grid-cols-2 gap-2">
-            <input {...register('price')} type="number" step="0.01" className="input input-bordered bg-gray-50 text-black" placeholder="Preço" required />
+          <div className="form-control">
+            <label className="label py-1">
+              <span className="label-text font-black uppercase text-[10px] text-gray-500">Nome</span>
+            </label>
+            <input 
+              {...register('name', { required: true })} 
+              className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold" 
+              placeholder="Ex: Luvas de Treino G" 
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text font-black uppercase text-[10px] text-gray-500">Preço (R$)</span>
+              </label>
+              <input 
+                {...register('price', { required: true })} 
+                type="number" step="0.01" 
+                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-mono" 
+                placeholder="0.00" 
+              />
+            </div>
+
             {!product && (
-              <input {...register('initialStock')} type="number" className="input input-bordered bg-gray-50 text-black" placeholder="Estoque Inicial" />
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text font-black uppercase text-[10px] text-gray-500">Estoque Inicial</span>
+                </label>
+                <input 
+                  {...register('initialStock')} 
+                  type="number" 
+                  className="input input-bordered w-full bg-gray-50 text-gray-800 border-2" 
+                  placeholder="0" 
+                />
+              </div>
             )}
           </div>
-          <input {...register('category_id')} className="input input-bordered w-full bg-gray-50 text-black" placeholder="ID da Categoria" required />
-          <textarea {...register('description')} className="textarea textarea-bordered w-full bg-gray-50 text-black" placeholder="Descrição"></textarea>
-          
-          <div className="modal-action">
-            <button type="button" onClick={onClose} className="btn btn-ghost">Cancelar</button>
-            <button type="submit" disabled={isSaving} className="btn btn-primary">
-              {isSaving ? <span className="loading loading-spinner"></span> : 'Confirmar'}
+
+          {/* 🚀 SELECT DINÂMICO DE CATEGORIAS */}
+          <div className="form-control">
+            <label className="label py-1">
+              <span className="label-text font-black uppercase text-[10px] text-gray-500">Categoria</span>
+            </label>
+            <select 
+              {...register('category_id', { required: true })} 
+              className="select select-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold"
+              defaultValue=""
+            >
+              <option value="" disabled>Selecione uma categoria...</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            {categories.length === 0 && (
+              <p className="text-[9px] text-error mt-1 italic font-bold">Nenhuma categoria encontrada no banco.</p>
+            )}
+          </div>
+
+            <label className="label py-1">
+              <span className="label-text font-black uppercase text-[10px] text-gray-500">Descrição Opcional</span>
+            </label>
+          <div className="form-control">
+            <textarea 
+              {...register('description')} 
+              className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-20" 
+              placeholder="Detalhes sobre o produto..."
+            ></textarea>
+          </div>
+
+          <div className="flex justify-center mt-4 gap-2">
+            <button type="button" onClick={onClose} className="btn bg-base-300 font-black uppercase italic text-xs">Cancelar</button>
+            <button 
+              type="submit" 
+              disabled={isSaving} 
+              className="btn btn-primary px-4 font-black uppercase italic shadow-lg shadow-primary/20"
+            >
+              {isSaving ? <span className="loading loading-spinner"></span> : 'Salvar'}
             </button>
           </div>
         </form>
