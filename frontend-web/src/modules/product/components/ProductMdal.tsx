@@ -123,10 +123,10 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
             )}
           </div>
 
+          <div className="form-control flex flex-col gap-2">
             <label className="label py-1">
               <span className="label-text font-black uppercase text-[10px] text-gray-500">Descrição Opcional</span>
             </label>
-          <div className="form-control">
             <textarea 
               {...register('description')} 
               className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-20" 
