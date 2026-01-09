@@ -22,12 +22,12 @@ export function PlanTable({ plans, onEdit, onDelete }: PlanTableProps) {
           <tbody>
             {plans.map((plan) => (
               <tr key={plan.id} className="hover:bg-base-200">
-                <td className="font-bold">{plan.name}</td>
-                <td>{plan.duration_days} dias</td>
-                <td className="font-bold text-success">
+                <td className="p-3">{plan.name}</td>
+                <td className="p-3">{plan.duration_days} dias</td>
+                <td className="p-3 text-success">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(plan.price)}
                 </td>
-                <td className="flex justify-center gap-2">
+                <td className="flex justify-center gap-2 p-3">
                   <button onClick={() => onEdit(plan)} className="btn btn-ghost btn-xs text-info p-0"><Edit size={16} /></button>
                   <button onClick={() => onDelete(plan.id)} className="btn btn-ghost btn-xs text-error p-0"><Trash2 size={16} /></button>
                 </td>
