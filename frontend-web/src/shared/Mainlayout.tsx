@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, ClipboardCheck, Settings, Menu, 
@@ -12,13 +11,13 @@ export function MainLayout() {
   const isActive = (path: string) => pathname === path ? 'active bg-primary text-white' : '';
 
   return (
-    <div className="drawer lg:drawer-open bg-base-200 min-h-screen">
+    <div className="drawer xl:drawer-open bg-base-200 min-h-screen">
       <input id="main-drawer" type="checkbox" className="drawer-toggle" />
       
       <div className="drawer-content flex flex-col">
         {/* HEADER */}
         <header className="navbar bg-base-100 border-b border-base-300 sticky top-0 z-20 w-full px-4">
-          <div className="flex-none lg:hidden">
+          <div className="flex-none md:hidden">
             <label htmlFor="main-drawer" className="btn btn-square btn-ghost">
               <Menu className="w-6 h-6 text-primary" />
             </label>
