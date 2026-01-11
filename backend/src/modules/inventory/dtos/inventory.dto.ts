@@ -6,6 +6,7 @@ export interface CreateProductDTO {
   description?: string;
   price: number;
   initialStock?: number;
+  image_url?: string;
 }
 
 export interface UpdateProductDTO {
@@ -16,6 +17,7 @@ export interface UpdateProductDTO {
   price?: number;
   description?: string;
   is_active?: boolean;
+  image_url?: string;
 }
 
 export interface UpdateStockDTO {

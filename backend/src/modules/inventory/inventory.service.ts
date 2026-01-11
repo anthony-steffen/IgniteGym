@@ -7,7 +7,7 @@ import { AppError } from '../../errors/AppError';
 
 export class InventoryService {
   async createProduct(data: CreateProductDTO) {
-    const { tenantId, category_id, name, price, description, initialStock = 0 } = data;
+    const { tenantId, category_id, name, price, description, initialStock = 0, image_url } = data;
 
     const category = await Category.findByPk(category_id);
     if (!category) throw new AppError('A categoria selecionada não existe.', 404);
@@ -19,7 +19,8 @@ export class InventoryService {
         name,
         price,
         description,
-        stock_quantity: initialStock
+        stock_quantity: initialStock,
+        image_url,
       }, { transaction: t });
 
       if (initialStock > 0) {
@@ -69,7 +70,7 @@ export class InventoryService {
 
   async listProducts(tenantId: string) {
     return Product.findAll({
-      where: { tenant_id: tenantId },
+      where: { tenant_id: tenantId, is_active: true },
       include: [{ association: 'category', attributes: ['name'] }],
       order: [['name', 'ASC']]
     });

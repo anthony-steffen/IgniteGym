@@ -18,6 +18,7 @@ export class Product extends Model<
   declare price: number;
   declare stock_quantity: CreationOptional<number>;
   declare is_active: CreationOptional<boolean>;
+  declare image_url: string | null;
 
   // 🔗 Associações tipadas (Intellisense)
   declare category?: NonAttribute<Category>;
@@ -38,6 +39,7 @@ Product.init({
   price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
+  image_url: { type: DataTypes.STRING, allowNull: true },
 }, {
   sequelize,
   tableName: 'products',
