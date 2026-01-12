@@ -50,11 +50,12 @@ export function SupplierPage() {
           <Building2 className="text-primary" size={35} />
           <h1 className="text-2xl font-black italic uppercase text-base-content leading-none">
             Marcas
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Gestão de Fabricantes</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Fabricantes</p>
           </h1>
         </div>
         <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px]">
-          <Plus size={14} strokeWidth={4} /> Adicionar Marca
+          <Plus size={12} strokeWidth={4} /> 
+          Fornecedor
         </button>
       </div>
 
@@ -63,10 +64,10 @@ export function SupplierPage() {
           <div key={supplier.id} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all group">
             <div className="card-body p-5">
               <div className="flex justify-between items-start">
-                <h2 className="card-title font-black italic uppercase text-sm text-gray-800">
+                <h2 className="card-title font-black italic uppercase text-sm">
                   {supplier.name}
                 </h2>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1">
                   <button onClick={() => handleOpenModal(supplier)} className="btn btn-square btn-ghost btn-xs text-info">
                     <Pencil size={14} />
                   </button>
@@ -80,7 +81,7 @@ export function SupplierPage() {
                 {supplier.description || "Sem descrição disponível."}
               </p>
 
-              <div className="card-actions justify-start gap-4 border-t border-dashed pt-4 mt-2 border-base-300">
+              <div className="card-actions justify-start gap-4 border-t border-dashed pt-2 mt-2 border-base-300">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase">
                   <Mail size={12} className="text-primary" /> {supplier.email || '---'}
                 </div>
