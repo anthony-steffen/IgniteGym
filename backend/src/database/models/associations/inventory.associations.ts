@@ -1,8 +1,9 @@
 import { Product } from '../product.model';
 import { Category } from '../category.model';
 import { Tenant } from '../tenant.model';
+import { Supplier } from '../supplier.model';
 import { StockMovement } from '../stock-moviments.model';
-import { AssociationConfig } from './types'; // Seguindo seu padrão de tipos
+import { AssociationConfig } from './types';
 
 export const inventoryAssociations: AssociationConfig[] = [
   // === CATEGORY & PRODUCT ===
@@ -17,6 +18,20 @@ export const inventoryAssociations: AssociationConfig[] = [
     type: 'hasMany',
     target: Product,
     options: { foreignKey: 'category_id', as: 'products' },
+  },
+
+  // === SUPPLIER & PRODUCT (Novo) ===
+  {
+    source: Product,
+    type: 'belongsTo',
+    target: Supplier,
+    options: { foreignKey: 'supplier_id', as: 'supplier' },
+  },
+  {
+    source: Supplier,
+    type: 'hasMany',
+    target: Product,
+    options: { foreignKey: 'supplier_id', as: 'products' },
   },
 
   // === PRODUCT & STOCK MOVEMENT ===
@@ -36,6 +51,12 @@ export const inventoryAssociations: AssociationConfig[] = [
   // === RELAÇÕES COM TENANT ===
   {
     source: Product,
+    type: 'belongsTo',
+    target: Tenant,
+    options: { foreignKey: 'tenant_id', as: 'tenant' },
+  },
+  {
+    source: Supplier, // Adicionado para isolamento multi-tenant dos fornecedores
     type: 'belongsTo',
     target: Tenant,
     options: { foreignKey: 'tenant_id', as: 'tenant' },

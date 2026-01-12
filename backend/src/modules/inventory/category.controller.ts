@@ -1,26 +1,26 @@
 import { Request, Response } from 'express';
 import { CategoryService } from './category.service';
 
+const categoryService = new CategoryService();
+
 export class CategoryController {
-  private service: CategoryService;
-
-  constructor() {
-    this.service = new CategoryService();
-  }
-
   list = async (req: Request, res: Response) => {
-    const categories = await this.service.list();
+    const { tenantId } = req.user!;
+    const categories = await categoryService.listCategories(tenantId);
     return res.json(categories);
   };
 
   create = async (req: Request, res: Response) => {
-    const category = await this.service.create(req.body);
+    const { tenantId } = req.user!;
+    const category = await categoryService.createCategory(tenantId, req.body);
     return res.status(201).json(category);
   };
 
   update = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
     const { id } = req.params;
-    const category = await this.service.update({
+
+    const category = await categoryService.updateCategory(tenantId, {
       id,
       ...req.body,
     });
@@ -28,8 +28,10 @@ export class CategoryController {
   };
 
   delete = async (req: Request, res: Response) => {
+    const { tenantId } = req.user!;
     const { id } = req.params;
-    await this.service.delete(id);
+
+    await categoryService.removeCategory(tenantId, id);
     return res.status(204).send();
   };
 }

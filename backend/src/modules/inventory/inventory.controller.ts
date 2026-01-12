@@ -7,6 +7,7 @@ export class InventoryController {
   listProducts = async (req: Request, res: Response) => {
     const { tenantId } = req.user!;
     const products = await inventoryService.listProducts(tenantId);
+    console.log(products);
     return res.json(products);
   };
 
