@@ -1,7 +1,8 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, ClipboardCheck, Settings, Menu, 
-  UserCog, Package, ScrollText, DollarSign, UserPlus 
+  UserCog, Package, ScrollText, DollarSign, UserPlus, 
+  Building2
 } from 'lucide-react';
 
 export function MainLayout() {
@@ -63,6 +64,12 @@ export function MainLayout() {
           <li>
             <Link to="/products" className={`gap-4 p-3 ${isActive('/products')}`}>
               <Package size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Produtos/Estoque</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/suppliers" className={`gap-4 p-3 ${isActive('/suppliers')}`}>
+              <Building2 size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Fornecedores</span>
             </Link>
           </li>
 

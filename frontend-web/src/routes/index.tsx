@@ -7,6 +7,7 @@ import { RegisterPage } from '../modules/auth/pages/RegisterPage';
 import { PlanPage } from '../modules/plan/pages/PlanPage';
 import { StudentPage } from '../modules/student/pages/StudentPage';
 import { ProductPage } from '../modules/product/pages/ProductPage';
+import { SupplierPage } from '../modules/supplier/pages/SupplierPage';
 
 import { HomePage } from '../modules/home/pages/HomePage';
 import { MainLayout } from '../shared/Mainlayout';
@@ -29,6 +30,7 @@ export function AppRoutes() {
         <Route path="students" element={<StudentPage />} />
         <Route path="products" element={<ProductPage />} />
         <Route path="sales" element={<SalesPage />} />
+        <Route path="suppliers" element={<SupplierPage />} />
         
         {/* Estrutura preparada para os novos módulos */}
         <Route path="checkin" element={<div className="p-4">Dashboard Check-in em breve...</div>} />
