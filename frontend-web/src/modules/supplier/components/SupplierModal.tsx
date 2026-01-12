@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import type { Supplier, SupplierFormData } from '../types';
 
 interface SupplierModalProps {
@@ -10,21 +11,32 @@ interface SupplierModalProps {
 }
 
 export function SupplierModal({ isOpen, onClose, onSave, selectedSupplier }: SupplierModalProps) {
-  // Inicialização direta do estado para evitar cascading renders
-  const [formData, setFormData] = useState<SupplierFormData>({
-    name: selectedSupplier?.name ?? '',
-    description: selectedSupplier?.description ?? '',
-    email: selectedSupplier?.email ?? '',
-    phone: selectedSupplier?.phone ?? '',
-  });
+  // Inicialização do Hook Form com os tipos definidos
+  const { register, handleSubmit, reset } = useForm<SupplierFormData>();
+
+  // Efeito para resetar os campos sempre que o modal abrir ou o fornecedor selecionado mudar
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedSupplier) {
+        reset({
+          name: selectedSupplier.name,
+          description: selectedSupplier.description ?? '',
+          email: selectedSupplier.email ?? '',
+          phone: selectedSupplier.phone ?? '',
+        });
+      } else {
+        // Limpa os campos para um novo cadastro
+        reset({ name: '', description: '', email: '', phone: '' });
+      }
+    }
+  }, [selectedSupplier, reset, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: SupplierFormData) => {
     const payload = selectedSupplier 
-      ? { ...formData, id: selectedSupplier.id } 
-      : formData;
+      ? { ...data, id: selectedSupplier.id } 
+      : data;
     
     onSave(payload);
   };
@@ -42,19 +54,17 @@ export function SupplierModal({ isOpen, onClose, onSave, selectedSupplier }: Sup
           </p>
         </header>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Nome da Marca */}
           <div className="form-control">
             <label className="label py-1">
               <span className="label-text font-black uppercase text-[10px] text-gray-500">Nome da Marca</span>
             </label>
             <input 
+              {...register('name', { required: true })}
               type="text" 
-              className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold" 
+              className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold focus:border-primary" 
               placeholder="Ex: Max Titanium"
-              value={formData.name}
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required 
             />
           </div>
 
@@ -65,11 +75,10 @@ export function SupplierModal({ isOpen, onClose, onSave, selectedSupplier }: Sup
                 <span className="label-text font-black uppercase text-[10px] text-gray-500">E-mail</span>
               </label>
               <input 
+                {...register('email')}
                 type="email" 
-                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold text-sm" 
+                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold text-sm focus:border-primary" 
                 placeholder="contato@marca.com"
-                value={formData.email}
-                onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
               />
             </div>
             <div className="form-control">
@@ -77,11 +86,10 @@ export function SupplierModal({ isOpen, onClose, onSave, selectedSupplier }: Sup
                 <span className="label-text font-black uppercase text-[10px] text-gray-500">Telefone</span>
               </label>
               <input 
+                {...register('phone')}
                 type="text" 
-                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold text-sm" 
+                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold text-sm focus:border-primary" 
                 placeholder="(00) 00000-0000"
-                value={formData.phone}
-                onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               />
             </div>
           </div>
@@ -92,10 +100,9 @@ export function SupplierModal({ isOpen, onClose, onSave, selectedSupplier }: Sup
               <span className="label-text font-black uppercase text-[10px] text-gray-500">Descrição Detalhada</span>
             </label>
             <textarea 
-              className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-24" 
+              {...register('description')}
+              className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-24 focus:border-primary" 
               placeholder="Detalhes sobre o fornecedor ou marca..."
-              value={formData.description}
-              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
             />
           </div>
 

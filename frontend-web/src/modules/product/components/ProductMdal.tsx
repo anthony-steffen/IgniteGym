@@ -11,7 +11,7 @@ interface ProductModalProps {
 
 export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
   const { register, handleSubmit, reset } = useForm<CreateProductData>();
-  const { createProduct, updateProduct, categories, isSaving } = useInventory();
+  const { createProduct, updateProduct, categories, suppliers, isSaving } = useInventory();
 
   useEffect(() => {
     if (isOpen) {
@@ -21,9 +21,10 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
           description: product.description || '',
           price: product.price,
           category_id: product.category_id,
+          supplier_id: product.supplier_id,
         });
       } else {
-        reset({ name: '', description: '', price: 0, category_id: '', initialStock: 0 });
+        reset({ name: '', description: '', price: 0, category_id: '', supplier_id: '', initialStock: 0 });
       }
     }
   }, [product, reset, isOpen]);
@@ -57,19 +58,19 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
             {product ? '📝 Editar Produto' : '🚀 Novo Item'}
           </h3>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-            Sincronizado com Banco de Dados Central
+            Sincronizado com Catálogo de Produtos Central
           </p>
         </header>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="form-control">
             <label className="label py-1">
-              <span className="label-text font-black uppercase text-[10px] text-gray-500">Nome</span>
+              <span className="label-text font-black uppercase text-[10px] text-gray-500">Nome do Produto</span>
             </label>
             <input 
               {...register('name', { required: true })} 
               className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold" 
-              placeholder="Ex: Luvas de Treino G" 
+              placeholder="Ex: Whey Protein 900g" 
             />
           </div>
 
@@ -81,8 +82,7 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
               <input 
                 {...register('price', { required: true })} 
                 type="number" step="0.01" 
-                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-mono" 
-                placeholder="0.00" 
+                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-mono font-bold" 
               />
             </div>
 
@@ -94,58 +94,73 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
                 <input 
                   {...register('initialStock')} 
                   type="number" 
-                  className="input input-bordered w-full bg-gray-50 text-gray-800 border-2" 
-                  placeholder="0" 
+                  className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold" 
                 />
               </div>
             )}
           </div>
 
-          {/* 🚀 SELECT DINÂMICO DE CATEGORIAS */}
-          <div className="form-control">
-            <label className="label py-1">
-              <span className="label-text font-black uppercase text-[10px] text-gray-500">Categoria</span>
-            </label>
-            <select 
-              {...register('category_id', { required: true })} 
-              className="select select-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold"
-              defaultValue=""
-            >
-              <option value="" disabled>Selecione uma categoria...</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name.toUpperCase()}
-                </option>
-              ))}
-            </select>
-            {categories.length === 0 && (
-              <p className="text-[9px] text-error mt-1 italic font-bold">Nenhuma categoria encontrada no banco.</p>
-            )}
+          {/* Grid para Categorias e Fornecedores */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text font-black uppercase text-[10px] text-gray-500">Categoria</span>
+              </label>
+              <select 
+                {...register('category_id', { required: true })} 
+                className="select select-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold"
+                defaultValue=""
+              >
+                <option value="" disabled>Selecione...</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text font-black uppercase text-[10px] text-gray-500">Marca/Fornecedor</span>
+              </label>
+              <select 
+                {...register('supplier_id', { required: true })} 
+                className="select select-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold"
+                defaultValue=""
+              >
+                <option value="" disabled>Selecione...</option>
+                {suppliers.map((sup) => (
+                  <option key={sup.id} value={sup.id}>{sup.name.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="form-control flex flex-col gap-2">
+          <div className="form-control">
             <label className="label py-1">
               <span className="label-text font-black uppercase text-[10px] text-gray-500">Descrição Opcional</span>
             </label>
             <textarea 
               {...register('description')} 
               className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-20" 
-              placeholder="Detalhes sobre o produto..."
-            ></textarea>
+              placeholder="Detalhes técnicos ou observações..."
+            />
           </div>
 
-          <div className="flex justify-center mt-4 gap-2">
-            <button type="button" onClick={onClose} className="btn bg-base-300 font-black uppercase italic text-xs">Cancelar</button>
+          <div className="flex justify-center mt-6 gap-2">
+            <button type="button" onClick={onClose} className="btn bg-black text-white hover:bg-gray-800 font-black uppercase italic text-xs px-6">
+              CANCELAR
+            </button>
             <button 
               type="submit" 
               disabled={isSaving} 
-              className="btn btn-primary px-4 font-black uppercase italic shadow-lg shadow-primary/20"
+              className="btn btn-primary px-8 font-black uppercase italic shadow-lg shadow-primary/20"
             >
-              {isSaving ? <span className="loading loading-spinner"></span> : 'Salvar'}
+              {isSaving ? <span className="loading loading-spinner"></span> : 'SALVAR PRODUTO'}
             </button>
           </div>
         </form>
       </div>
+      <div className="modal-backdrop" onClick={onClose}></div>
     </div>
   );
 }

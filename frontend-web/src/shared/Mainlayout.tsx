@@ -12,7 +12,7 @@ export function MainLayout() {
   const isActive = (path: string) => pathname === path ? 'active bg-primary text-white' : '';
 
   return (
-    <div className="drawer xl:drawer-open bg-base-200 min-h-screen">
+    <div className="drawer md:drawer-open bg-base-200 min-h-screen">
       <input id="main-drawer" type="checkbox" className="drawer-toggle" />
       
       <div className="drawer-content flex flex-col">

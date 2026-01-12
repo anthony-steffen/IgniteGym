@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import type { Product, CreateProductData, Category } from '../modules/product/types';
+import type { Supplier } from '../modules/supplier/types';
 
 export function useInventory() {
   const queryClient = useQueryClient();
@@ -22,6 +23,16 @@ export function useInventory() {
       return response.data;
     },
     staleTime: 1000 * 60 * 10, // Categorias mudam pouco, cache de 10 min
+  });
+
+  // 🚀 BUSCA DE FORNECEDORES (Utilizando sua nova rota /suppliers)
+  const suppliersQuery = useQuery<Supplier[]>({
+    queryKey: ['inventory-suppliers'],
+    queryFn: async () => {
+      const response = await api.get('inventory/suppliers'); // Ajuste o endpoint se for diferente
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 10,
   });
 
   const createProductMutation = useMutation({
@@ -53,8 +64,9 @@ export function useInventory() {
 
   return {
     products: productsQuery.data ?? [],
-    categories: categoriesQuery.data ?? [], // Disponibiliza categorias para o Modal
-    isLoading: productsQuery.isLoading || categoriesQuery.isLoading,
+    categories: categoriesQuery.data ?? [],
+    suppliers: suppliersQuery.data ?? [],
+    isLoading: productsQuery.isLoading || categoriesQuery.isLoading || suppliersQuery.isLoading,
     createProduct: createProductMutation.mutateAsync,
     updateProduct: updateProductMutation.mutateAsync,
     deleteProduct: deleteProductMutation.mutateAsync,

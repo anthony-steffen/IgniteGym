@@ -1,5 +1,6 @@
 
 export interface Product {
+	supplier: any;
   is_active: boolean;
   id: string;
   name: string;
@@ -7,6 +8,7 @@ export interface Product {
   price: number;
   stock_quantity: number;
   category_id: string;
+  supplier_id: string;
   image_url?: string; // 🚀 Adicionado
   category?: {
     name: string;
@@ -18,6 +20,7 @@ export interface CreateProductData {
   description?: string;
   price: number;
   category_id: string;
+  supplier_id: string;
   initialStock?: number;
   image_url?: string;
 }

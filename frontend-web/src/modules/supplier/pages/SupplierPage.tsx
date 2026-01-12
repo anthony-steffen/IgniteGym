@@ -59,7 +59,7 @@ export function SupplierPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 px-4">
         {suppliers.map((supplier) => (
           <div key={supplier.id} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all group">
             <div className="card-body p-5">
