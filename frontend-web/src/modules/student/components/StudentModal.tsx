@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Student, StudentFormData } from '../types';
 
 interface StudentModalProps {

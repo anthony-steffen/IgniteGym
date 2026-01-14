@@ -136,29 +136,29 @@ export function SalesPage() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-4 gap-3 pb-24 max-w-240">
+          <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-6 gap-3 pb-24 w-full h-screen">
             {paginatedItems.map((product) => (
               <div
                 key={product.id}
-                className="card bg-white shadow-sm border border-gray-100 hover:border-primary transition-all rounded-xl overflow-hidden h-70">
-                <figure className="aspect-square bg-gray-50 relative h-40">
+                className="card bg-white shadow-sm border border-white hover:border-primary transition-all rounded-xl overflow-hidden max-w-50 h-90 md:h-100">
+                <div className="aspect-square bg-gray-50 relative h-60 md:h-70">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className="object-cover w-full h-full"
+                      className="object-scale-down"
                     />
                   ) : (
                     <Package size={32} className="text-gray-200" />
                   )}
                   {/* Badge de Categoria */}
                   {product.category && (
-                    <div className="absolute top-1 left-1 bg-primary text-white text-[8px] px-1 rounded font-bold uppercase">
+                    <div className="absolute bottom-1 center bg-primary text-white text-[8px] px-1 rounded font-bold uppercase items-center">
                       {product.category.name}
                     </div>
                   )}
-                </figure>
-                <div className="card-body p-3 flex flex-col justify-between items-center">
+                </div>
+                <div className="card-body p-2 flex flex-col items-center">
                   <div className="text-center w-full">
                     {/* Marca / Fornecedor */}
                     <p className="text-[8px] text-gray-400 font-bold uppercase truncate">
@@ -169,7 +169,7 @@ export function SalesPage() {
                     </h2>
                   </div>
                   
-                  <div className="flex flex-col items-center gap-1 w-full text-center">
+                  <div className="flex flex-col items-center gap-2 w-full text-center">
                     <div className="flex justify-between w-full items-center px-1">
                       <div className="bg-black text-white px-2 py-0.5 rounded font-black italic text-[10px]">
                         R$ {Number(product.price).toFixed(2)}
@@ -182,8 +182,9 @@ export function SalesPage() {
                     
                     <button
                       onClick={() => addToCart(product)}
-                      className="btn btn-primary btn-xs btn-block font-black italic uppercase mt-1">
-                      <Plus size={12} strokeWidth={4} /> Adicionar
+                      className="btn btn-primary btn-xs btn-block font-black italic uppercase">
+                      {/* <Plus size={12} strokeWidth={4} />  */}
+											Adicionar
                     </button>
                   </div>
                 </div>
@@ -329,7 +330,7 @@ function CartContent({
         </div>
         <button
           disabled={cart.length === 0}
-          className="btn btn-primary btn-block h-16 font-black italic uppercase text-lg shadow-xl shadow-primary/10 gap-3 border-none">
+          className="btn btn-primary btn-block bg-base-200 h-16 font-black italic uppercase text-lg shadow-xl shadow-primary/10 gap-3 border-none">
           <CheckCircle2 size={24} strokeWidth={3} /> Finalizar Venda
         </button>
       </div>

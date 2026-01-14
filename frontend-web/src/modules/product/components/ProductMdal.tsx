@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Product, CreateProductData } from '../types';
 import { useInventory } from '../../../hooks/useInventory';
+import { Link } from 'lucide-react';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ interface ProductModalProps {
 export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
   const { register, handleSubmit, reset } = useForm<CreateProductData>();
   const { createProduct, updateProduct, categories, suppliers, isSaving } = useInventory();
-
+  
   useEffect(() => {
     if (isOpen) {
       if (product) {
@@ -22,9 +23,10 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
           price: product.price,
           category_id: product.category_id,
           supplier_id: product.supplier_id,
+          image_url: product.image_url || '',
         });
       } else {
-        reset({ name: '', description: '', price: 0, category_id: '', supplier_id: '', initialStock: 0 });
+        reset({ name: '', description: '', price: 0, category_id: '', supplier_id: '', initialStock: 0, image_url: '' });
       }
     }
   }, [product, reset, isOpen]);
@@ -144,6 +146,27 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
               className="textarea textarea-bordered bg-gray-50 text-gray-800 border-2 h-20" 
               placeholder="Detalhes técnicos ou observações..."
             />
+          </div>
+
+          {/* Preview da Imagem */}
+          <div className="form-control">
+            <label className="label py-1">
+              <span className="label-text font-black uppercase text-[10px] text-gray-500">Link da Imagem (URL)</span>
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <Link size={16} />
+              </span>
+              <input 
+                {...register('image_url')} 
+                type="url" 
+                placeholder="https://exemplo.com/imagem.jpg" 
+                className="input input-bordered w-full pl-10 font-bold focus:border-primary text-xs"
+              />
+              <p className="text-[10px] mt-1 text-gray-400 italic">
+                Dica: Você pode usar links do Imgur, Pinterest ou do seu próprio site.
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-center mt-6 gap-2">
