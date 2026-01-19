@@ -1,12 +1,27 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, ClipboardCheck, Settings, Menu, 
   UserCog, Package, ScrollText, DollarSign, UserPlus, 
-  Building2
+  Building2, LogOut
 } from 'lucide-react';
+import { api } from '../services/api';
 
 export function MainLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  // Função de Logout
+  const handleLogout = () => {
+    // 1. Limpa os dados de autenticação
+    localStorage.removeItem('@IgniteGym:token');
+    localStorage.removeItem('@IgniteGym:user');
+    
+    // 2. Remove o header de autorização do Axios
+    delete api.defaults.headers.common['Authorization'];
+    
+    // 3. Redireciona para o login
+    navigate('/login');
+  };
 
   // Função auxiliar para marcar item ativo
   const isActive = (path: string) => pathname === path ? 'active bg-primary text-white' : '';
@@ -26,6 +41,17 @@ export function MainLayout() {
           <div className="flex-1 px-2 font-bold italic uppercase tracking-tighter">
             IGNITE<span className="text-primary">GYM</span> - Unidade Centro
           </div>
+
+          {/* BOTÃO DE LOGOUT NO HEADER */}
+          <div className="flex-none gap-2">
+            <button 
+              onClick={handleLogout}
+              className="btn btn-ghost btn-sm text-error gap-2 font-bold uppercase"
+            >
+              <span className="hidden sm:inline">Sair</span>
+              <LogOut size={18} />
+            </button>
+          </div>
         </header>
 
         <main className="p-4 md:p-8">
@@ -42,7 +68,7 @@ export function MainLayout() {
              <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">IGNITEGYM</h1>
           </li>
 
-          {/* Links Mapeados pelos seus Módulos */}
+          {/* Links Mapeados */}
           <li>
             <Link to="/home" className={`gap-4 p-3 ${isActive('/home')}`}>
               <LayoutDashboard size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Geral</span>
