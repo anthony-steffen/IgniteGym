@@ -18,7 +18,7 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div className= "absolute right-2 top-2 z-50 flex items-center justify-center">
+    <div className= "absolute right-25 top-2 z-50 flex items-center justify-center">
       <button 
         onClick={toggleTheme} 
         className="btn btn-ghost btn-circle"
