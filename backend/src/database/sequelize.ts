@@ -1,42 +1,48 @@
 import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
 
-// Verifica se está em produção através do NODE_ENV ou da presença da URL do banco
+// 1. Carrega as variáveis de ambiente antes de qualquer lógica
+dotenv.config();
+
+// 2. Determina o modo de operação
 const isProduction = process.env.NODE_ENV === "production" || !!process.env.DATABASE_URL;
 
+// 3. Configuração da instância
 export const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: "mysql",
-      logging: false, // Sempre desligado em produção para performance
+      logging: false,
       dialectOptions: isProduction ? {
         ssl: {
-          rejectUnauthorized: false, // Ativa SSL apenas se estiver em produção
+          rejectUnauthorized: false,
         },
       } : {},
     })
   : new Sequelize(
-      process.env.DB_NAME || "ignitegym",
-      process.env.DB_USER || "root",
-      process.env.DB_PASS || "",
+      process.env.DB_NAME as string,
+      process.env.DB_USER as string,
+      process.env.DB_PASS as string,
       {
-        host: process.env.DB_HOST || "localhost",
+        host: process.env.DB_HOST,
         port: Number(process.env.DB_PORT || 3306),
         dialect: "mysql",
-        logging: isProduction ? false : console.log, // Loga consultas apenas em desenvolvimento
+        logging: isProduction ? false : console.log,
+        // Garante que o Sequelize não tente conectar antes do banco estar pronto no Docker
+        retry: {
+          max: 10
+        }
       }
     );
 
-// Função de teste de conexão
 async function testConnection() {
   try {
     await sequelize.authenticate();
-    console.log(`🟢 [DATABASE] Conexão ativa em modo: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
-    
-    const [result]: any = await sequelize.query('SELECT 1 + 1 AS result');
-    console.log('✅ [DATABASE] Teste de consulta:', result[0].result === 2 ? "SUCESSO" : "FALHA");
+    console.log(`🟢 [DATABASE] Conectado em modo: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
+    console.log(`📍 Host: ${process.env.DB_HOST}`);
   } catch (error) {
-    console.error('🔴 [DATABASE] Erro de conexão:');
+    console.error('🔴 [DATABASE] Erro de conexão detalhado:');
     if (error instanceof Error) {
-      console.error(`   Detalhes: ${error.message}`);
+      console.error(`Mensagem: ${error.message}`);
     }
   }
 }

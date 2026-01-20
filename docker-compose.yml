@@ -6,7 +6,7 @@ services:
     container_name: ignitegym_api
     command: npm run dev
     ports:
-      - "${PORT}:3001"
+      - "3001:3001"
     volumes:
       - ./backend:/usr/src/app
     depends_on:
