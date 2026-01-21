@@ -11,9 +11,9 @@ export async function connectDatabase(
   for (let i = 1; i <= retries; i++) {
     try {
       await sequelize.authenticate();
-      console.log('🟢 Banco conectado com sucesso!');
-
       setupAssociations();
+      
+      console.log('🟢 Banco conectado com sucesso!');
 
       console.log('🧩 Models e associações inicializados!');
       return;

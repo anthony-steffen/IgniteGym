@@ -1,3 +1,4 @@
+// src/database/models/associations/index.ts
 import { tenantAssociations } from './tenant.associations';
 import { userAssociations } from './user.associations';
 import { studentAssociations } from './student.associations';

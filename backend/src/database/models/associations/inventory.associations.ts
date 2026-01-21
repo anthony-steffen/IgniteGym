@@ -19,6 +19,13 @@ export const inventoryAssociations: AssociationConfig[] = [
     target: Product,
     options: { foreignKey: 'category_id', as: 'products' },
   },
+  
+  {
+    source: Category,
+    type: 'belongsTo',
+    target: Tenant,
+    options: { foreignKey: 'tenant_id', as: 'tenant' },
+  },
 
   // === SUPPLIER & PRODUCT (Novo) ===
   {
