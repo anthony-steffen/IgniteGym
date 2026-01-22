@@ -1,13 +1,18 @@
-// src/modules/employee/employee.controller.ts
 import { Request, Response } from 'express';
 import { EmployeeService } from './employee.service';
-
 
 export class EmployeeController {
   private employeeService: EmployeeService;
 
   constructor() {
     this.employeeService = new EmployeeService();
+  }
+
+  // Novo método para o Select do Modal no Front-end
+  async listEligible(req: Request, res: Response) {
+    const { tenantId } = req.params;
+    const users = await this.employeeService.listEligibleUsers(tenantId);
+    return res.json(users);
   }
 
   async create(req: Request, res: Response) {

@@ -13,6 +13,7 @@ import { SalesPage } from '../modules/product/pages/SalesPage';
 // Componentes de Estrutura e Proteção
 import { ProtectedRoute } from '../shared/ProtectedRoute';
 import { MainLayout } from '../shared/Mainlayout';
+import { EmployeePage } from '../modules/employee/pages/EmployeePage';
 
 export function AppRoutes() {
   return (
@@ -38,9 +39,9 @@ export function AppRoutes() {
           <Route path="/products" element={<ProductPage />} />
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/suppliers" element={<SupplierPage />} />
+          <Route path="/employee" element={<EmployeePage />} />
           
           <Route path="/checkin" element={<div className="p-4">Dashboard Check-in em breve...</div>} />
-          <Route path="/employee" element={<div className="p-4">Dashboard Funcionários em breve...</div>} />
           <Route path="/subscriptions" element={<div className="p-4">Dashboard Inscrições em breve...</div>} />
           <Route path="/settings" element={<div className="p-4">Configurações em breve...</div>} />
         </Route>
