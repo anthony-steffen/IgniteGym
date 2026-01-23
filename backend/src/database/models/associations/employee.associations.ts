@@ -23,7 +23,7 @@ export const employeeAssociations: AssociationConfig[] = [
     source: User,
     type: 'hasOne',
     target: Employee,
-    options: { foreignKey: 'user_id', as: 'employee_profile' },
+    options: { foreignKey: 'user_id', as: 'employee' },
   },
   
   // 🔗 Um funcionário está associado a uma academia

@@ -1,4 +1,3 @@
-// src/database/models/employee.model.ts
 import {
   Model,
   DataTypes,
@@ -18,11 +17,17 @@ export class Employee extends Model<
 > {
   declare id: CreationOptional<string>;
   declare user_id: string;
-  declare tenant_id: string; // Adicionado para consistência multi-tenant
+  declare tenant_id: string;
   declare role_title: string;
-  declare is_active: boolean;
+  declare is_active: CreationOptional<boolean>;
 
-  // ✅ ASSOCIAÇÕES TIPADAS
+  // 🚀 AQUI ESTÁ A CORREÇÃO:
+  // Usamos CreationOptional e o tipo correto para bater com a Migration
+  declare salary: CreationOptional<number>;
+  declare weekly_hours: CreationOptional<number>;
+  declare work_schedule: CreationOptional<any>; // 'any' ou 'object' para aceitar o JSON do front
+
+  // ASSOCIAÇÕES TIPADAS
   declare user?: NonAttribute<User>;
   declare tenant?: NonAttribute<Tenant>;
 
@@ -51,6 +56,18 @@ Employee.init(
     role_title: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    salary: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true, // Compatível com CreationOptional
+    },
+    weekly_hours: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Compatível com CreationOptional
+    },
+    work_schedule: {
+      type: DataTypes.JSON, // Compatível com o objeto vindo do Front
+      allowNull: true,
     },
     is_active: {
       type: DataTypes.BOOLEAN,

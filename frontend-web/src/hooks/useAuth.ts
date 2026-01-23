@@ -6,6 +6,9 @@ import type { AuthResponse } from '../modules/auth/types';
 export function useAuth() {
   const [loading, setLoading] = useState(false);
 
+  const storageUser = localStorage.getItem('@IgniteGym:user');
+  const user = storageUser ? JSON.parse(storageUser) : null;
+
   async function signIn(email: string, password: string): Promise<AuthResponse> {
     setLoading(true);
     try {
@@ -27,5 +30,5 @@ export function useAuth() {
     }
   }
 
-  return { signIn, loading };
+  return { signIn, loading, user };
 }

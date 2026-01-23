@@ -1,29 +1,43 @@
-// src/modules/employee/employee.routes.ts
 import { Router } from 'express';
-import { EmployeeController } from './employee.controller'
+import { EmployeeController } from './employee.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = Router();
 const employeeController = new EmployeeController();
 
+// Todas as rotas de funcionários exigem autenticação
 router.use(authMiddleware);
 
-// Rota para listar usuários elegíveis para serem funcionários
-router.get('/:tenantId/eligible', employeeController.listEligible);
+/**
+ * ROTA: Listar usuários disponíveis para contratação (Select do Modal)
+ * IMPORTANTE: Esta rota deve vir antes de '/:tenantId/:id' para não haver conflito de parâmetros.
+ */
+router.get('/:tenantId/eligible', (req, res) => employeeController.listEligible(req, res));
 
-// Rota para criar um novo funcionário
-router.post('/:tenantId', employeeController.create);
+/**
+ * ROTA: Listar todos os funcionários de uma unidade (Tabela principal)
+ */
+router.get('/:tenantId', (req, res) => employeeController.index(req, res));
 
-// Rota para listar todos os funcionários da academia
-router.get('/:tenantId', employeeController.index);
+/**
+ * ROTA: Buscar detalhes de um funcionário específico
+ */
+router.get('/:tenantId/:id', (req, res) => employeeController.findById(req, res));
 
-// Rota para visualizar um funcionário específico
-router.get('/:tenantId/:id', employeeController.show);
+/**
+ * ROTA: Criar novo funcionário
+ * Suporta: Promoção de usuário existente (userId) ou Criação Direta (name, email, password)
+ */
+router.post('/:tenantId', (req, res) => employeeController.create(req, res));
 
-// Rota para atualizar um funcionário
-router.put('/:tenantId/:id', employeeController.update);
+/**
+ * ROTA: Atualizar dados do funcionário (Cargo, Salário, Horários, Status)
+ */
+router.put('/:tenantId/:id', (req, res) => employeeController.update(req, res));
 
-// Rota para excluir um funcionário
-router.delete('/:tenantId/:id', employeeController.delete);
+/**
+ * ROTA: Remover vínculo de funcionário
+ */
+router.delete('/:tenantId/:id', (req, res) => employeeController.delete(req, res));
 
 export default router;

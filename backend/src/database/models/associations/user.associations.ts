@@ -13,14 +13,6 @@ export const userAssociations: AssociationConfig[] = [
     options: { foreignKey: 'tenant_id', as: 'tenant' },
   },
 
-  // User → Employee
-  {
-    source: User,
-    type: 'hasOne',
-    target: Employee,
-    options: { foreignKey: 'user_id', as: 'employee' },
-  },
-
   // User → Student
   {
     source: User,

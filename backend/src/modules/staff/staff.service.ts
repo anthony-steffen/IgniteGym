@@ -75,6 +75,9 @@ export class StaffService {
           tenant_id: finalTenantId,
           role_title: roleTitle || (gymName ? 'Proprietário' : 'Funcionário'),
           is_active: true,
+          salary: 0, 
+          weekly_hours: 44,
+          work_schedule: {},
         }, { transaction: t });
 
         return user;
