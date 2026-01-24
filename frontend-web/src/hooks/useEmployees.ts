@@ -1,31 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
-
-export interface CreateEmployeePayload {
-  roleTitle: string;
-  salary: number;
-  weeklyHours: number;
-  workSchedule: object;
-  userId?: string;
-  name?: string;
-  email?: string;
-  password?: string;
-}
 
 export function useEmployees(tenantId?: string) {
   const queryClient = useQueryClient();
 
-  // 1. Busca funcionários atuais (Tabela)
+  // MONITOR DE ENTRADA: Verifica se o hook recebeu o ID necessário
+  console.log(`[useEmployees] Renderizado. tenantId atual: "${tenantId}"`);
+
+  // 1. LISTAGEM (O seu GET que parece não estar disparando)
   const employeesQuery = useQuery({
     queryKey: ['employees', tenantId],
     queryFn: async () => {
-      const { data } = await api.get(`/employees/${tenantId}`);
-      return data;
+      const url = `/employees/${tenantId}`;
+      console.log(`[📡 FETCH] Iniciando GET em: ${url}`);
+      try {
+        const { data } = await api.get(url);
+        console.log(`[✅ FETCH SUCCESS] Dados recuperados:`, data);
+        return data;
+      } catch (err: any) {
+        console.error(`[❌ FETCH ERROR] Erro na rota ${url}:`, err.response?.data || err.message);
+        throw err;
+      }
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId, // Se tenantId for "", a requisição NÃO acontece.
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
   });
 
-  // 2. Busca usuários elegíveis (Select do Modal)
+  // 2. USUÁRIOS ELEGÍVEIS (Para o Modal)
   const eligibleUsersQuery = useQuery({
     queryKey: ['eligible-users', tenantId],
     queryFn: async () => {
@@ -35,9 +37,9 @@ export function useEmployees(tenantId?: string) {
     enabled: !!tenantId,
   });
 
-  // 3. Mutação para criar/contratar (Atualizada para o novo contrato)
+  // 3. CRIAÇÃO
   const createEmployeeMutation = useMutation({
-    mutationFn: async (payload: CreateEmployeePayload) => {
+    mutationFn: async (payload: any) => {
       const { data } = await api.post(`/employees/${tenantId}`, payload);
       return data;
     },
@@ -47,9 +49,9 @@ export function useEmployees(tenantId?: string) {
     },
   });
 
-  // 4. Mutação para atualizar (Edição)
+  // 4. ATUALIZAÇÃO
   const updateEmployeeMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: Partial<CreateEmployeePayload> }) => {
+    mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
       const { data } = await api.put(`/employees/${tenantId}/${id}`, payload);
       return data;
     },
@@ -58,11 +60,10 @@ export function useEmployees(tenantId?: string) {
     },
   });
 
-  // 5. Mutação para deletar
+  // 5. DELEÇÃO
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await api.delete(`/employees/${tenantId}/${id}`);
-      return data;
+      await api.delete(`/employees/${tenantId}/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees', tenantId] });
@@ -70,11 +71,17 @@ export function useEmployees(tenantId?: string) {
     },
   });
 
+  // MONITOR DE BLOQUEIO
+  if (!tenantId) {
+    console.warn("[useEmployees] ⚠️ Requisição suspensa: tenantId está ausente.");
+  }
+
   return {
     employees: employeesQuery.data ?? [],
     eligibleUsers: eligibleUsersQuery.data ?? [],
     isLoading: employeesQuery.isLoading || eligibleUsersQuery.isLoading,
-    isCreating: createEmployeeMutation.isPending,
+    isError: employeesQuery.isError,
+    // Mantendo todos os seus métodos originais
     createEmployee: createEmployeeMutation.mutateAsync,
     updateEmployee: updateEmployeeMutation.mutateAsync,
     deleteEmployee: deleteEmployeeMutation.mutateAsync,

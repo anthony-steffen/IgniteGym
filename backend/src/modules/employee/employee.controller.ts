@@ -3,80 +3,103 @@ import { EmployeeService } from './employee.service';
 import { AppError } from '../../errors/AppError';
 
 export class EmployeeController {
-  private employeeService: EmployeeService;
-
-  constructor() {
-    this.employeeService = new EmployeeService();
-  }
-
-  async listEligible(req: Request, res: Response) {
+  /**
+   * CRIAÇÃO / CONTRATAÇÃO
+   * Trata tanto o registro de novos usuários quanto a promoção de alunos a funcionários.
+   */
+  static async create(req: Request, res: Response) {
     try {
-      const { tenantId } = req.params;
-      const users = await this.employeeService.listEligibleUsers(tenantId);
-      return res.json(users);
-    } catch (error: any) {
-      const statusCode = error instanceof AppError ? error.statusCode : 500;
-      return res.status(statusCode).json({
-        status: "error",
-        message: error.message
+      // O tenantId pode vir da URL (via hook) ou do body
+      const tenantId = req.params.tenantId || req.body.tenantId;
+      
+      const employee = await EmployeeService.create({
+        ...req.body,
+        tenantId
       });
-    }
-  }
 
-  async create(req: Request, res: Response) {
-    try {
-      const { tenantId } = req.params;
-      const employee = await this.employeeService.create({ ...req.body, tenantId });
       return res.status(201).json(employee);
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
       return res.status(statusCode).json({
         status: "error",
-        message: error.message
+        message: error.message || "Erro ao criar registro de funcionário."
       });
     }
   }
 
-  async index(req: Request, res: Response) {
+  /**
+   * LISTAGEM DE FUNCIONÁRIOS
+   * Retorna a lista de Employees com os dados de User incluídos.
+   */
+  static async list(req: Request, res: Response) {
     try {
       const { tenantId } = req.params;
-      const employees = await this.employeeService.listAll(tenantId);
+
+      if (!tenantId) {
+        throw new AppError("O ID da unidade é obrigatório.", 400);
+      }
+
+      const employees = await EmployeeService.list(tenantId);
       return res.json(employees);
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ 
+        status: "error", 
+        message: error.message 
+      });
     }
   }
 
-  async findById(req: Request, res: Response) {
+  /**
+   * USUÁRIOS ELEGÍVEIS
+   * Lista usuários que pertencem ao tenant mas ainda não são funcionários.
+   */
+  static async listEligibleUsers(req: Request, res: Response) {
     try {
-      const { id, tenantId } = req.params;
-      const employee = await this.employeeService.findById(id, tenantId);
+      const { tenantId } = req.params;
+      const users = await EmployeeService.listEligibleUsers(tenantId);
+      return res.json(users);
+    } catch (error: any) {
+      return res.status(500).json({ 
+        status: "error", 
+        message: error.message 
+      });
+    }
+  }
+
+  /**
+   * ATUALIZAÇÃO UNIFICADA
+   * Atualiza dados de cargo, salário e horários no Employee, e nome no User.
+   */
+  static async update(req: Request, res: Response) {
+    try {
+      const { id } = req.params; // ID do Employee
+      const employee = await EmployeeService.update(id, req.body);
+      
       return res.json(employee);
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
-      return res.status(statusCode).json({ status: "error", message: error.message });
+      return res.status(statusCode).json({ 
+        status: "error", 
+        message: error.message 
+      });
     }
   }
 
-  async update(req: Request, res: Response) {
+  /**
+   * DESATIVAÇÃO / REMOÇÃO
+   */
+  static async delete(req: Request, res: Response) {
     try {
-      const { id, tenantId } = req.params;
-      const employee = await this.employeeService.update(id, tenantId, req.body);
-      return res.json(employee);
-    } catch (error: any) {
-      const statusCode = error instanceof AppError ? error.statusCode : 500;
-      return res.status(statusCode).json({ status: "error", message: error.message });
-    }
-  }
-
-  async delete(req: Request, res: Response) {
-    try {
-      const { id, tenantId } = req.params;
-      await this.employeeService.delete(id, tenantId);
+      const { id } = req.params;
+      await EmployeeService.deactivate(id);
       return res.status(204).send();
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
-      return res.status(statusCode).json({ status: "error", message: error.message });
+      return res.status(statusCode).json({ 
+        status: "error", 
+        message: error.message 
+      });
     }
   }
 }

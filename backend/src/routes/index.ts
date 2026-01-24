@@ -2,7 +2,6 @@
 import { Router } from "express";
 import usersRoutes from "./users.routes";
 import authRoutes  from "../modules/auth/auth.routes";
-import staffRoutes from "../modules/staff/staff.routes";
 import employeeRouter from "../modules/employee/employee.routes";
 import studentsRoutes from "../modules/student/student.routes";
 import subscriptionsRoutes from "../modules/subscription/subscription.routes";
@@ -18,7 +17,6 @@ routes.get("/health", (_, res) => res.status(200).json({ status: "ok" }));
 
 // Rotas limpas: O arquivo de destino decide se é público ou privado
 routes.use("/auth", authRoutes);
-routes.use("/staff", staffRoutes);
 routes.use("/employees", employeeRouter);
 routes.use("/students", studentsRoutes);
 routes.use("/subscriptions", subscriptionsRoutes);

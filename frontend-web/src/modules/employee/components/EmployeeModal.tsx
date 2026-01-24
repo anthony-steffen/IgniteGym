@@ -16,7 +16,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "promote">("create");
 
-  const initialFormState = {
+  const initialFormState = {  
     userId: "",
     name: "",
     email: "",
@@ -39,12 +39,11 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
   useEffect(() => {
     if (isOpen) {
       if (selectedEmployee) {
-        // Mapeamento cuidadoso: API (snake_case) -> Estado (camelCase)
         setFormData({
           userId: selectedEmployee.user_id || "",
           name: selectedEmployee.user?.name || "",
           email: selectedEmployee.user?.email || "",
-          password: "", // Senha nunca vem da API
+          password: "", 
           roleTitle: selectedEmployee.role_title || "INSTRUTOR",
           salary: Number(selectedEmployee.salary) || 0,
           weeklyHours: selectedEmployee.weekly_hours || 44,
@@ -63,7 +62,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
 
     try {
       if (selectedEmployee) {
-        // Edição
+        // Correção aqui: Enviando exatamente como o hook useEmployees espera
         await updateEmployee({
           id: selectedEmployee.id,
           payload: {
@@ -75,7 +74,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
         });
         toast.success("Dados atualizados com sucesso!");
       } else {
-        // Criação: Removemos campos desnecessários dependendo do modo
+        // Criação unificada
         const payload = mode === "promote" 
           ? { 
               userId: formData.userId,
@@ -83,11 +82,16 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
               salary: formData.salary,
               weeklyHours: formData.weeklyHours,
               workSchedule: formData.workSchedule,
-              tenantId // Garantindo que o tenantId vá no payload se o hook exigir
+              tenantId 
             } 
           : { 
-              ...formData, 
-              userId: undefined,
+              name: formData.name,
+              email: formData.email,
+              password: formData.password,
+              roleTitle: formData.roleTitle,
+              salary: formData.salary,
+              weeklyHours: formData.weeklyHours,
+              workSchedule: formData.workSchedule,
               tenantId 
             };
 
@@ -109,18 +113,15 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
       <div className="modal-box max-w-2xl bg-base-100 p-0 overflow-hidden border border-base-300 shadow-xl">
         {/* Header */}
         <div className="bg-base-200 px-6 py-4 flex justify-between items-center border-b border-base-300">
-          <div>
-            <h3 className="text-lg font-black italic uppercase text-primary">
-              {selectedEmployee ? "Editar Perfil Staff" : "Nova Contratação"}
-            </h3>
-          </div>
+          <h3 className="text-lg font-black italic uppercase text-primary">
+            {selectedEmployee ? "Editar Perfil Staff" : "Nova Contratação"}
+          </h3>
           <button type="button" onClick={onClose} className="btn btn-ghost btn-sm btn-square">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-          {/* Seletor de Modo (Apenas na criação) */}
           {!selectedEmployee && (
             <div className="flex gap-2 p-1 bg-base-300/50 rounded-lg">
               <button 
@@ -140,7 +141,6 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
             </div>
           )}
 
-          {/* Dados Pessoais / Seleção */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-base-200/30 p-4 rounded-xl border border-base-200">
             {mode === "promote" && !selectedEmployee ? (
               <div className="form-control md:col-span-2">
@@ -152,7 +152,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                   required
                 >
                   <option value="">Selecione um nome na lista...</option>
-                  {eligibleUsers.map((u: any) => (
+                  {eligibleUsers?.map((u: any) => (
                     <option key={u.id} value={u.id}>{u.name.toUpperCase()} ({u.email})</option>
                   ))}
                 </select>
@@ -180,7 +180,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                     required 
                   />
                 </div>
-                {!selectedEmployee && (
+                {!selectedEmployee && mode === "create" && (
                   <div className="form-control md:col-span-2">
                     <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Senha de Acesso</span></label>
                     <input 
@@ -196,7 +196,6 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
             )}
           </div>
 
-          {/* Dados Profissionais */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-control">
               <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Cargo / Função</span></label>
@@ -217,8 +216,9 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                 <DollarSign size={14} className="absolute left-3 top-2.5 text-success" />
                 <input 
                   type="number" 
+                  step="0.01"
                   className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.salary === 0 ? "" : formData.salary} // Se for 0, mostra vazio para o usuário
+                  value={formData.salary === 0 ? "" : formData.salary} 
                   placeholder="0"
                   onChange={(e) => {
                     const val = e.target.value;
@@ -234,7 +234,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                 <input 
                   type="number" 
                   className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.weeklyHours === 0 ? "" : formData.weeklyHours} // Melhora a experiência de apagar
+                  value={formData.weeklyHours === 0 ? "" : formData.weeklyHours} 
                   placeholder="0"
                   onChange={(e) => {
                     const val = e.target.value;
@@ -245,7 +245,6 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
             </div>
           </div>
 
-          {/* Footer */}
           <div className="modal-action bg-base-200 p-4 -mx-6 -mb-6 border-t border-base-300">
             <button type="button" onClick={onClose} className="btn btn-ghost btn-sm uppercase font-black italic">Descartar</button>
             <button 

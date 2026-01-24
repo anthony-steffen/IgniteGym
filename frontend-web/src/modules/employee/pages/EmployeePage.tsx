@@ -1,161 +1,160 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { useAuth } from "../../../hooks/useAuth";
-import { useEmployees } from "../../../hooks/useEmployees";
-import { EmployeeModal } from "../components/EmployeeModal";
 import { 
-  Plus, 
-  Trash2, 
-  Users, 
-  Pencil, 
-  Mail, 
-  Shield, 
-  UserCheck, 
-  Loader2 
+  Plus, Search, Edit2, Trash2, BadgeDollarSign, Clock,
+  ShieldCheck, Dumbbell, UserCog, UserCircle, Loader2 
 } from "lucide-react";
+import { useEmployees } from "../../../hooks/useEmployees";
+import { useAuth } from "../../../hooks/useAuth";
+import { EmployeeModal } from "../components/EmployeeModal";
+import type { Employee } from "../types";
 
 export function EmployeePage() {
-  // Pegamos o user do seu hook useAuth (que agora retorna user do localStorage)
-  const { user } = useAuth() as any;
-  const tenantId = user?.tenant_id;
-
-  // Hook de funcionários com as funções de busca e exclusão
-  const { 
-    employees, 
-    isLoading, 
-    deleteEmployee 
-  } = useEmployees(tenantId);
+  const { user } = useAuth();
+  // Ajustado para a chave real do seu log
+  const tenantId = user?.tenant_id || ""; 
   
+  const { employees, deleteEmployee, isLoading } = useEmployees(tenantId);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Abre o modal para criar novo (sem params) ou editar (com emp)
-  const handleOpenModal = (employee: any = null) => {
-    setSelectedEmployee(employee);
+  const getRoleIcon = (role: string) => {
+    const r = role?.toUpperCase();
+    if (r?.includes("GERENTE") || r?.includes("ADMIN")) return <ShieldCheck size={20} className="text-red-400" />;
+    if (r?.includes("INSTRUTOR") || r?.includes("PROFESSOR")) return <Dumbbell size={20} className="text-gray-neutral" />;
+    return <UserCog size={18} className="text-gray-400" />;
+  };
+
+  const handleEdit = (emp: Employee) => {
+    setSelectedEmployee(emp);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const confirmed = window.confirm(
-      `Deseja remover "${name.toUpperCase()}" da equipe de staff?`
-    );
-
-    if (confirmed) {
-      try {
-        await deleteEmployee(id);
-      } catch (error) {
-        console.error("Erro ao remover funcionário:", error);
-      }
-    }
+  const getRoleStyles = (role: string) => {
+    const r = role?.toUpperCase();
+    if (r?.includes("GERENTE") || r?.includes("ADMIN")) return "badge bg-black text-white border-black";
+    if (r?.includes("INSTRUTOR") || r?.includes("PROFESSOR")) return "badge-info text-white border-black";
+    return "badge-ghost text-gray-500 border-gray-300";
   };
 
-  if (isLoading) return (
-    <div className="flex flex-col items-center justify-center p-20 gap-4 text-center">
-      <Loader2 className="animate-spin text-primary" size={40} />
-      <span className="uppercase font-black italic text-gray-400 tracking-tighter">
-        Sincronizando Base de Staff...
-      </span>
-    </div>
+  // Cast para 'any' no filtro para evitar erro de lint/TS com as chaves do backend
+  const filteredEmployees = employees?.filter((emp: any) =>
+    emp.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.role_title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (isLoading) return (
+    <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>
+  );
+
+  const orderedEmployees = filteredEmployees?.sort((a: any, b: any) => {
+    const getPriority = (role: string) => {
+      const r = role?.toUpperCase() || "";
+      // Administrador Geral é o topo absoluto (Prioridade 1)
+      if (r === "ADMINISTRADOR GERAL") return 1;
+      
+      // Outros tipos de Admin ou Gerente (Prioridade 2)
+      if (r.includes("ADMIN") || r.includes("GERENTE")) return 2;
+      
+      // Professores e Instrutores (Prioridade 3)
+      if (r.includes("INSTRUTOR") || r.includes("PROFESSOR")) return 3;
+      
+      // Qualquer outro cargo (Prioridade 4)
+      return 4;
+    };
+
+    return getPriority(a.role_title) - getPriority(b.role_title);
+  });
+
   return (
-    <div className="w-full space-y-6 p-4">
-      {/* HEADER DA PÁGINA */}
-      <header className="flex justify-between items-center px-2">
-        <div className="flex items-start gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <Users className="text-primary" size={30} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black italic uppercase text-base-content leading-none">
-              Equipe Staff
-            </h1>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-              Controle de acessos da unidade
-            </p>
-          </div>
+    <div className="p-6 space-y-6 animate-fadeIn">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-base-100 p-6 rounded-2xl border border-base-200 shadow-sm">
+        <div>
+          <h1 className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-2">
+            <UserCircle className="text-primary" size={28} /> Gestão de Staff
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">Controle de colaboradores da unidade.</p>
         </div>
-        
-        {/* BOTÃO PARA CRIAR FUNCIONÁRIO (PROMOVER USUÁRIO) */}
-        <button 
-          onClick={() => handleOpenModal()} 
-          className="btn btn-primary font-black italic uppercase text-[11px] shadow-lg shadow-primary/20 gap-2"
-        >
-          <Plus size={14} strokeWidth={4} /> 
-          Contratar
+        <button onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }} className="btn btn-primary uppercase font-black italic gap-2 shadow-lg shadow-primary/20">
+          <Plus size={20} /> Nova Contratação
         </button>
-      </header>
-
-      {/* GRID DE COLABORADORES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {employees && employees.length > 0 ? (
-          employees.map((emp: any) => (
-            <div key={emp.id} className="card bg-base-100 shadow-sm border border-base-200 hover:border-primary/30 transition-all group">
-              <div className="card-body p-5">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="card-title font-black italic uppercase text-sm leading-tight text-base-content">
-                      {emp.user?.name || "Usuário sem nome"}
-                    </h2>
-                    <div className="flex items-center gap-1 mt-1 text-primary">
-                      <Shield size={10} />
-                      <span className="text-[9px] font-black uppercase italic tracking-tighter">
-                        {emp.role_title}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-1">
-                    <button 
-                      onClick={() => handleOpenModal(emp)} 
-                      className="btn btn-square btn-ghost btn-xs text-info hover:bg-info/10"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(emp.id, emp.user?.name)} 
-                      className="btn btn-square btn-ghost btn-xs text-error hover:bg-error/10"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-2 border-t border-dashed border-base-200 pt-3">
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                    <Mail size={12} className="text-gray-300" />
-                    <span className="truncate">{emp.user?.email}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-[8px] font-black italic uppercase px-2 py-0.5 rounded ${emp.is_active ? 'bg-success/10 text-success' : 'bg-gray-100 text-gray-400'}`}>
-                      {emp.is_active ? 'ATIVO' : 'INATIVO'}
-                    </span>
-                    <span className="text-[8px] font-bold text-gray-300 uppercase">
-                      ID: {emp.id.split('-')[0]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          /* ESTADO VAZIO */
-          <div className="col-span-full bg-base-200/30 border-2 border-dashed border-base-300 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-            <UserCheck size={48} className="text-base-300 mb-4" />
-            <h3 className="font-black italic uppercase text-gray-400 text-lg">Sem Staff Registrado</h3>
-            <p className="text-[10px] font-bold text-gray-400 uppercase max-w-xs mt-2">
-              Não há funcionários nesta unidade. Clique em "Contratar" para promover um Aluno ou Admin.
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* MODAL REUTILIZÁVEL */}
+      <div className="relative w-full">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input
+          type="text"
+          placeholder="BUSCAR COLABORADOR..."
+          className="input input-bordered w-full pl-12 font-bold uppercase text-xs tracking-widest bg-base-100"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className="overflow-x-auto bg-base-100 rounded-2xl border border-base-200 shadow-sm">
+        <table className="table w-full">
+          <thead className="bg-base-200/50">
+            <tr className="text-[10px] font-black uppercase text-gray-500">
+              <th>Colaborador</th>
+              <th>Cargo</th>
+              <th>Remuneração</th>
+              <th>Jornada</th>
+              <th className="text-right px-6">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="font-bold">
+            {orderedEmployees?.map((emp: any) => (
+              <tr key={emp.id} className="hover:bg-base-200/30 transition-colors border-b border-base-200">
+                <td className="py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative p-2.5 bg-base-200 rounded-xl">
+                      {getRoleIcon(emp.role_title)}
+                      {/* Ponto Pulsante com Cores Fixas (Independente do Tema) */}
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${emp.is_active ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
+                        <span className={`relative inline-flex rounded-full h-3 w-3 ${emp.is_active ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`}></span>
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-sm uppercase tracking-tight">{emp.user?.name}</div>
+                      <div className="text-[10px] text-gray-400 font-medium">{emp.user?.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {/* Badge se for GERENTE ou ADMIN deve ser de cor vermelha, se for INSTRUTOR OU PROFESSOR deve ser de cor azul */}
+                  <span className={`badge badge-sm font-black italic py-3 px-4 border uppercase ${getRoleStyles(emp.role_title)}`}>
+                    {emp.role_title}
+                  </span>
+                </td>
+                <td>
+                  <div className="flex items-center gap-1 text-success text-sm">
+                    <BadgeDollarSign size={14} />
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(emp.salary) || 0)}
+                  </div>
+                </td>
+                <td>
+                  <div className="flex items-center gap-1 text-info text-sm">
+                    <Clock size={14} />
+                    {emp.weekly_hours || 0}h/sem
+                  </div>
+                </td>
+                <td className="text-right px-6">
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => handleEdit(emp)} className="btn btn-square btn-ghost btn-sm text-gray-400 hover:text-primary"><Edit2 size={16} /></button>
+                    <button onClick={() => { if(confirm(`Remover ${emp.user?.name}?`)) deleteEmployee(emp.id); }} className="btn btn-square btn-ghost btn-sm text-gray-400 hover:text-error"><Trash2 size={16} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <EmployeeModal 
-        key={selectedEmployee?.id ?? 'new-hiring-process'} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         tenantId={tenantId}
         selectedEmployee={selectedEmployee}
       />
