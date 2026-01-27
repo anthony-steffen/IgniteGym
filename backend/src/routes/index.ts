@@ -10,6 +10,7 @@ import checkinRoutes from "../modules/checkin/checkin.routes";
 import inventoryRouter  from "../modules/inventory/inventory.routes";
 import categoryRouter from "../modules/inventory/category.routes";
 import salesRouter from "../modules/sale/sales.routes";
+import tenantRouter from "../modules/tenant/tenants.routes";
 
 const routes = Router();
 
@@ -17,6 +18,7 @@ routes.get("/health", (_, res) => res.status(200).json({ status: "ok" }));
 
 // Rotas limpas: O arquivo de destino decide se é público ou privado
 routes.use("/auth", authRoutes);
+routes.use("/tenants", tenantRouter);
 routes.use("/employees", employeeRouter);
 routes.use("/students", studentsRoutes);
 routes.use("/subscriptions", subscriptionsRoutes);
