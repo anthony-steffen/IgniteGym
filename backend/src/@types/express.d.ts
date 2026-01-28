@@ -5,7 +5,7 @@ declare global {
   namespace Express {
     interface User {
       id: string;
-      tenantId: string;
+      tenantId: string | null;
       role: 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
     }
 

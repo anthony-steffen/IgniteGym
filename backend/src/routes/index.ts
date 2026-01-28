@@ -10,7 +10,7 @@ import checkinRoutes from "../modules/checkin/checkin.routes";
 import inventoryRouter  from "../modules/inventory/inventory.routes";
 import categoryRouter from "../modules/inventory/category.routes";
 import salesRouter from "../modules/sale/sales.routes";
-import tenantRouter from "../modules/tenant/tenants.routes";
+import tenantRouter from "../modules/tenant/tenant.routes";
 
 const routes = Router();
 

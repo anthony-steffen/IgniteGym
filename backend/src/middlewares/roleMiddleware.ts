@@ -1,4 +1,3 @@
-// backend/src/middlewares/roleMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 
 type Role = "ADMIN" | "MANAGER" | "STAFF" | "STUDENT";

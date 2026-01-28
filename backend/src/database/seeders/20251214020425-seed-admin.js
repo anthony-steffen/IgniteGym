@@ -4,30 +4,9 @@ const bcrypt = require('bcrypt');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 🔍 Verifica se o tenant já existe pelo slug
-    const [existingTenants] = await queryInterface.sequelize.query(
-      "SELECT id FROM tenants WHERE slug = 'academia-principal' LIMIT 1"
-    );
-
-    let tenantId;
-
-    if (existingTenants.length > 0) {
-      tenantId = existingTenants[0].id;
-    } else {
-      tenantId = uuidv4();
-      await queryInterface.bulkInsert('tenants', [{
-        id: tenantId,
-        name: 'Academia Principal',
-        slug: 'academia-principal',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-      }]);
-    }
-
     const passwordHash = await bcrypt.hash('admin123', 10);
 
-    // 🔍 Verifica se o usuário admin já existe
+    // 🔍 Verifica apenas se o usuário admin global já existe
     const [existingUsers] = await queryInterface.sequelize.query(
       `SELECT id FROM users WHERE email = 'admin@ignitegym.com' LIMIT 1`
     );
@@ -35,7 +14,7 @@ module.exports = {
     if (existingUsers.length === 0) {
       await queryInterface.bulkInsert('users', [{
         id: uuidv4(),
-        tenant_id: null,
+        tenant_id: null, // 🟢 Correto: Admin Global não pertence a nenhuma unidade
         email: 'admin@ignitegym.com',
         password_hash: passwordHash,
         role: 'ADMIN',
@@ -46,12 +25,11 @@ module.exports = {
       }]);
     }
   },
+
   async down(queryInterface, Sequelize) {
+    // Remove apenas o admin global
     await queryInterface.bulkDelete('users', {
       email: 'admin@ignitegym.com',
-    });
-    await queryInterface.bulkDelete('tenants', {
-      slug: 'academia-principal',
     });
   },
 };

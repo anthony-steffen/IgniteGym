@@ -4,7 +4,7 @@ import { authConfig } from '../config/auth';
 
 interface TokenPayload {
   userId: string;
-  tenantId: string;
+  tenantId: string | null; // 🟢 Ajustado para aceitar null
   role: 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
   iat: number;
   exp: number;
@@ -13,25 +13,24 @@ interface TokenPayload {
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) return res.status(401).json({ message: 'Token não fornecido' });
+  if (!authHeader) {
+    return res.status(401).json({ message: 'Token não fornecido' });
+  }
 
   const [, token] = authHeader.split(' ');
 
   try {
     const decoded = jwt.verify(token, authConfig.jwt.secret) as TokenPayload;
 
-    // 🚨 ADICIONE ESTAS LINHAS ABAIXO:
     req.user = {
       id: decoded.userId,
-      tenantId: decoded.tenantId,
+      tenantId: decoded.tenantId ?? null, // 🟢 Uso do Nullish coalescing
       role: decoded.role,
     };
 
-    return next(); // 🚀 ESSENCIAL: Permite que a requisição chegue ao Controller
-    // ----------------------------
-
+    return next();
   } catch (err) {
-    console.log('❌ [DEBUG] Erro JWT:', err instanceof Error ? err.message : 'Unknown error'); 
+    console.log('❌ [DEBUG] Erro JWT:', err instanceof Error ? err.message : 'Unknown error');
     return res.status(401).json({ message: 'Token inválido' });
   }
 }
