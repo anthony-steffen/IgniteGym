@@ -10,7 +10,7 @@ module.exports = {
       },
       tenant_id: {
         type: Sequelize.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'tenants',
           key: 'id'

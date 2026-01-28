@@ -15,7 +15,7 @@ export class User extends Model<
   InferCreationAttributes<User, { omit: 'employee' }>
 > {
   declare id: CreationOptional<string>;
-  declare tenant_id: string;
+  declare tenant_id: string | null;
   declare email: string | null;
   declare password_hash: string;
   declare role: 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
@@ -43,7 +43,7 @@ User.init(
     },
     tenant_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING,

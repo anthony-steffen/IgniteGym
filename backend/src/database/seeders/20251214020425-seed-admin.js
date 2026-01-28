@@ -35,11 +35,11 @@ module.exports = {
     if (existingUsers.length === 0) {
       await queryInterface.bulkInsert('users', [{
         id: uuidv4(),
-        tenant_id: tenantId,
+        tenant_id: null,
         email: 'admin@ignitegym.com',
         password_hash: passwordHash,
         role: 'ADMIN',
-        name: 'Administrador',
+        name: 'Administrador Geral',
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
