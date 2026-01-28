@@ -46,5 +46,12 @@ module.exports = {
       }]);
     }
   },
-  // ... down permanece igual
+  async down(queryInterface, Sequelize) {
+    await queryInterface.bulkDelete('users', {
+      email: 'admin@ignitegym.com',
+    });
+    await queryInterface.bulkDelete('tenants', {
+      slug: 'academia-principal',
+    });
+  },
 };

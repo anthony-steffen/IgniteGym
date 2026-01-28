@@ -24,4 +24,29 @@ export class TenantController {
 
     return res.status(201).json(result);
   }
+
+    static async show(req: Request, res: Response) {
+    // Pegamos o tenantId do usuário autenticado (padrão que vi no seu StudentController)
+    const { tenantId } = req.user as any; 
+
+    const tenant = await TenantService.show(tenantId);
+
+    return res.json(tenant);
+  }
+
+  static async update(req: Request, res: Response) {
+  // Pega o ID real do UUID que está no Token, não a string "update" da URL
+  const { tenantId } = req.user as any; 
+
+  const result = await TenantService.update(tenantId, req.body);
+  return res.json(result);
+}
+
+  static async delete(req: Request, res: Response) {
+    // Extração direta do objeto injetado pelo authMiddleware
+    const { tenantId } = req.user as any;
+    
+    const result = await TenantService.delete(tenantId);
+    return res.json(result);
+  }
 }

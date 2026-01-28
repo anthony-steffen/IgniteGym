@@ -51,4 +51,47 @@ export class TenantService {
       throw new AppError('Erro ao processar o registro da unidade.', 500);
     }
   }
+
+    static async show(tenantId: string) {
+    const tenant = await Tenant.findByPk(tenantId);
+
+    if (!tenant) {
+      throw new AppError('Unidade não encontrada.', 404);
+    }
+
+    return tenant;
+  }
+  
+    static async update(id: string, data: Partial<CreateTenantDTO>) {
+    const tenant = await Tenant.findByPk(id);
+    if (!tenant) throw new AppError('Academia não encontrada.', 404);
+
+    // Se estiver mudando o slug, verificar se o novo já existe
+    if (data.slug && data.slug !== tenant.slug) {
+      const slugExists = await Tenant.findOne({ where: { slug: data.slug } });
+      if (slugExists) throw new AppError('Este slug já está em uso.', 409);
+    }
+
+    await tenant.update(data);
+    return tenant;
+  }
+
+  static async delete(id: string) {
+    const tenant = await Tenant.findByPk(id);
+    if (!tenant) throw new AppError('Academia não encontrada.', 404);
+
+    try {
+      return await sequelize.transaction(async (t) => {
+        // 1. Opcional: Remover todos os usuários vinculados primeiro
+        await User.destroy({ where: { tenant_id: id }, transaction: t });
+        
+        // 2. Remover a academia
+        await tenant.destroy({ transaction: t });
+        
+        return { message: 'Unidade e usuários removidos com sucesso.' };
+      });
+    } catch (error) {
+      throw new AppError('Erro ao excluir unidade. Verifique se existem dependências.', 500);
+    }
+  }
 }

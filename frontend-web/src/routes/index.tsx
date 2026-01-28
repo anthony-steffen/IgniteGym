@@ -9,6 +9,7 @@ import { ProductPage } from '../modules/product/pages/ProductPage';
 import { SupplierPage } from '../modules/supplier/pages/SupplierPage';
 import { HomePage } from '../modules/home/pages/HomePage';
 import { SalesPage } from '../modules/product/pages/SalesPage';
+import { UnitSettingsPage } from '../modules/tenant/pages/UnitSettingsPage';
 
 // Componentes de Estrutura e Proteção
 import { ProtectedRoute } from '../shared/ProtectedRoute';
@@ -21,6 +22,7 @@ export function AppRoutes() {
       {/* 1. Rotas Públicas: Acessíveis sem login */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/settings" element={<UnitSettingsPage />} />
 
       {/* 2. Rotas Protegidas: 
           Tudo o que estiver dentro deste Route só carrega se passar no teste do ProtectedRoute 
