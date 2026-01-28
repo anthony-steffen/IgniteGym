@@ -7,11 +7,17 @@ export class StudentController {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { tenantId } = req.user;
+    // Se for Admin, ele precisa enviar o tenantId no body ou query
+    const tenantId = req.user.tenantId || (req.body.tenantId as string);
+
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Tenant ID é obrigatório para cadastrar aluno.' });
+    }
+
     const { name, email, phone, birth_date } = req.body;
 
     const result = await StudentService.create({
-      tenantId,
+      tenantId: tenantId as string, // Garantimos que é string para o DTO
       name,
       email,
       phone,
@@ -26,7 +32,12 @@ export class StudentController {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const students = await StudentService.list(req.user.tenantId);
+    // Se for Admin, pode filtrar por ?tenantId=... ou listar todos (depende do seu service)
+    const tenantId = req.user.tenantId || (req.query.tenantId as string);
+
+    // Se o seu Service.list exige uma string e o Admin quer ver todos, 
+    // passamos o tenantId ou tratamos conforme a regra de negócio do Service.
+    const students = await StudentService.list(tenantId as string);
     return res.json(students);
   }
 
@@ -36,31 +47,40 @@ export class StudentController {
     }
 
     const { id } = req.params;
+    const tenantId = req.user.tenantId || (req.query.tenantId as string);
+
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Tenant ID é necessário.' });
+    }
 
     const student = await StudentService.deactivate(
       id,
-      req.user.tenantId
+      tenantId as string
     );
 
     return res.json(student);
   }
 
-  //Atualizar informações do aluno
   static async update(req: Request, res: Response) {
-  const { id } = req.params;
-  const { tenantId } = req.user as any;
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-  // 📝 LOG DE ENTRADA
-  console.log('=== [DEBUG CONTROLLER] ===');
-  console.log('ID do Aluno (Params):', id);
-  console.log('Tenant ID (User Token):', tenantId);
-  console.log('Body recebido:', JSON.stringify(req.body, null, 2));
+    const { id } = req.params;
+    const tenantId = req.user.tenantId || (req.body.tenantId as string);
+
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Tenant ID não identificado.' });
+    }
+
+    console.log('=== [DEBUG CONTROLLER] ===');
+    console.log('ID do Aluno (Params):', id);
+    console.log('Tenant ID:', tenantId);
 
     try {
-      const result = await StudentService.update(id, tenantId, req.body);
+      const result = await StudentService.update(id, tenantId as string, req.body);
       return res.json(result);
     } catch (error) {
-      // O erro será capturado pelo seu middleware de erro global ou retornado aqui
       console.error('=== [ERRO NO CONTROLLER] ===', error);
       throw error; 
     }

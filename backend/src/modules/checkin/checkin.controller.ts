@@ -9,17 +9,35 @@ export class CheckInController {
   constructor() {
     this.service = new CheckInService();
   }
+
   async create(req: Request, res: Response) {
-    const tenantId = getTenantId(req);
-    const { studentId } = req.body
-    const checkIn = await this.service.create(tenantId, studentId);
+    // Tenta pegar o ID do token ou do body (caso seja Super-Admin)
+    const tenantId = getTenantId(req) || (req.body.tenantId as string);
+
+    if (!tenantId) {
+      return res.status(400).json({ 
+        message: 'Tenant ID é obrigatório para realizar check-in.' 
+      });
+    }
+
+    const { studentId } = req.body;
+    
+    // Usamos 'as string' pois garantimos a existência acima
+    const checkIn = await this.service.create(tenantId as string, studentId);
     return res.status(201).json(checkIn);
   }
 
   async listByStudent(req: Request, res: Response) {
-    const { studentId } = req.body;
-    const tenantId = getTenantId(req);
-    const checkIns = await this.service.listByStudent(tenantId, studentId);
+    const { studentId } = req.params; // Geralmente studentId vem da URL (params) e não do body em GETs
+    const tenantId = getTenantId(req) || (req.query.tenantId as string);
+
+    if (!tenantId) {
+      return res.status(400).json({ 
+        message: 'Tenant ID não identificado.' 
+      });
+    }
+
+    const checkIns = await this.service.listByStudent(tenantId as string, studentId);
     return res.json(checkIns);
   }
 }
