@@ -1,5 +1,6 @@
 // src/modules/student/pages/StudentPage.tsx
 import { useState } from "react";
+import { useParams } from "react-router-dom"; // Necessário para capturar o slug
 import { Plus, Users } from "lucide-react";
 import { useStudents } from "../../../hooks/useStudents";
 import { StudentStats } from "../components/StudentStats";
@@ -8,35 +9,44 @@ import { StudentModal } from "../components/StudentModal";
 import type { Student, StudentFormData, StudentStatsData } from "../types";
 
 export function StudentPage() {
+	// 1. Captura o slug da URL (ex: /app/academia-exemplo/students)
+	const { slug } = useParams<{ slug: string }>();
+	
+	// 2. Passa o slug para o hook para que as requisições usem a rota correta
 	const {
 		students,
 		isLoading,
 		createStudent,
 		deactivateStudent,
 		updateStudent,
-	} = useStudents();
+	} = useStudents(slug);
+
+
+
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
+	// Lógica de estatísticas mantida conforme original
 	const stats: StudentStatsData = {
 		total: students.length,
-		active: students.filter((s) => s.user.is_active).length,
-		newThisMonth: 0, // Pode ser implementado com filter de data
-		pending: students.filter((s) => !s.user.is_active).length,
+		active: students.filter((s: Student) => s.user?.is_active).length,
+		newThisMonth: 0, 
+		pending: students.filter((s: Student) => !s.user?.is_active).length,
 	};
 
 	const handleSave = async (data: StudentFormData) => {
 		try {
 			if (selectedStudent) {
-				// 2. Chame a mutation de update passando o user_id (que o backend espera)
+				// Update usa o ID do estudante e o objeto de dados
 				await updateStudent({
-					id: selectedStudent.user.id,
+					id: selectedStudent.id,
 					data,
 				});
 			} else {
+				// Create usa apenas o objeto de dados (o slug já está no hook)
 				await createStudent(data);
 			}
-			setIsModalOpen(false); // Fecha o modal após o sucesso
+			setIsModalOpen(false);
 		} catch (error) {
 			console.error("Erro ao salvar estudante:", error);
 		}
@@ -44,19 +54,21 @@ export function StudentPage() {
 
 	if (isLoading)
 		return (
-			<span className="loading loading-dots loading-lg text-primary"></span>
+			<div className="flex justify-center items-center h-64">
+				<span className="loading loading-dots loading-lg text-primary"></span>
+			</div>
 		);
 
 	return (
 		<div className="w-full space-y-6">
-			{/* Header da Página */}
+			{/* Header da Página com Slug para contexto visual */}
 			<div className="flex justify-between">
 				<div className="flex items-start gap-3">
 					<Users size={30} className="text-primary" />
 					<h1 className="text-2xl font-black italic uppercase tracking-tighter">
-						Alunos
+						Alunos <span className="text-gray-400">| {slug}</span>
 						<p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-							Gestão de alunos
+							Gestão de membros da unidade
 						</p>
 					</h1>
 				</div>
@@ -70,6 +82,7 @@ export function StudentPage() {
 				</button>
 			</div>
 
+			{/* Componentes de UI mantidos originais */}
 			<StudentStats stats={stats} />
 
 			<StudentTable
@@ -78,15 +91,18 @@ export function StudentPage() {
 					setSelectedStudent(s);
 					setIsModalOpen(true);
 				}}
-				onDelete={(id) => confirm("Desativar?") && deactivateStudent(id)}
+				onDelete={(id) => {
+					if (confirm("Deseja realmente desativar este aluno?")) {
+						deactivateStudent(id);
+					}
+				}}
 			/>
 
 			<StudentModal
-				key={selectedStudent?.user.id ?? "new"}
 				isOpen={isModalOpen}
-				selectedStudent={selectedStudent}
 				onClose={() => setIsModalOpen(false)}
 				onSave={handleSave}
+				selectedStudent={selectedStudent}
 			/>
 		</div>
 	);

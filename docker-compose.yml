@@ -9,6 +9,7 @@ services:
       - "3001:3001"
     volumes:
       - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
       - db
     env_file:

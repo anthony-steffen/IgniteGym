@@ -3,29 +3,43 @@ import { sequelize } from '../../database/sequelize';
 import { Subscription } from '../../database/models/subscription.model';
 import { Student } from '../../database/models/student.model';
 import { Plan } from '../../database/models/plan.model';
-
-import { CreateSubscriptionDTO } from './dtos/create-subscription.dto';
-import { CancelSubscriptionDTO } from './dtos/cancel-subscription.dto';
-import { ChangePlanDTO } from './dtos/change-plan.dto';
 import { AppError } from '../../errors/AppError';
 
 export class SubscriptionService {
   /**
-   * CRIAR ASSINATURA
+   * LISTAR MATRÍCULAS
+   * Pode listar todas da unidade ou filtrar por aluno
    */
-  async create(data: CreateSubscriptionDTO) {
+  async list(tenantId: string, studentId?: string) {
+    const where: any = { tenant_id: tenantId };
+    if (studentId) where.student_id = studentId;
+
+    return await Subscription.findAll({
+      where,
+      include: [
+        { association: 'student', include: ['user'] }, // Assume associação configurada
+        { association: 'plan' }
+      ],
+      order: [['created_at', 'DESC']],
+    });
+  }
+
+  /**
+   * CRIAR ASSINATURA (Matricular Aluno)
+   */
+  async create(data: any) {
     const { tenantId, studentId, planId } = data;
 
-    // 1️⃣ Valida aluno
+    // 1️⃣ Valida aluno dentro do tenant
     const student = await Student.findOne({
       where: { id: studentId, tenant_id: tenantId, is_active: true },
     });
 
     if (!student) {
-      throw new AppError('Aluno não encontrado ou está inativo.', 404);
+      throw new AppError('Aluno não encontrado, inativo ou pertence a outra unidade.', 404);
     }
 
-    // 2️⃣ Valida plano
+    // 2️⃣ Valida plano dentro do tenant
     const plan = await Plan.findOne({
       where: { id: planId, tenant_id: tenantId, is_active: true },
     });
@@ -40,16 +54,15 @@ export class SubscriptionService {
     });
 
     if (activeSubscription) {
-      throw new AppError('O aluno já possui uma assinatura ativa no momento.', 409);
+      throw new AppError('O aluno já possui uma assinatura ativa nesta unidade.', 409);
     }
 
-    // 4️⃣ Calcula datas
+    // 4️⃣ Calcula datas baseadas na duração do plano
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + plan.duration_days);
 
     try {
-      // 5️⃣ Cria assinatura
       return await Subscription.create({
         tenant_id: tenantId,
         student_id: studentId,
@@ -60,55 +73,27 @@ export class SubscriptionService {
         status: 'ACTIVE',
       });
     } catch (error) {
-      throw new AppError('Erro ao processar a assinatura no banco de dados.', 500);
+      throw new AppError('Erro ao processar a matrícula no banco de dados.', 500);
     }
   }
 
   /**
-   * CANCELAR ASSINATURA
+   * ATUALIZAR / TROCAR PLANO (Com Transação 🛡️)
+   * Renormalizado para o método 'update' do Controller
    */
-  async cancel(data: CancelSubscriptionDTO) {
-    const { subscriptionId, tenantId } = data;
-
-    const subscription = await Subscription.findOne({
-      where: { id: subscriptionId, tenant_id: tenantId },
-    });
-
-    if (!subscription) {
-      throw new AppError('Assinatura não encontrada.', 404);
-    }
-
-    if (subscription.status !== 'ACTIVE') {
-      throw new AppError('Esta assinatura já não está mais ativa.', 400);
-    }
-
-    try {
-      subscription.status = 'CANCELED';
-      subscription.end_date = new Date();
-      await subscription.save();
-
-      return subscription;
-    } catch (error) {
-      throw new AppError('Erro ao cancelar a assinatura.', 500);
-    }
-  }
-
-  /**
-   * TROCA DE PLANO (Com Transação 🛡️)
-   */
-  async changePlan(data: ChangePlanDTO) {
-    const { tenantId, studentId, newPlanId } = data;
+  async update(id: string, tenantId: string, data: any) {
+    const { newPlanId } = data;
 
     return await sequelize.transaction(async (t) => {
-      // 1️⃣ Busca assinatura ativa
-      const activeSubscription = await Subscription.findOne({
-        where: { tenant_id: tenantId, student_id: studentId, status: 'ACTIVE' },
+      // 1️⃣ Busca assinatura específica garantindo o tenant
+      const subscription = await Subscription.findOne({
+        where: { id, tenant_id: tenantId, status: 'ACTIVE' },
         transaction: t,
-        lock: t.LOCK.UPDATE // Evita mudanças simultâneas
+        lock: t.LOCK.UPDATE
       });
 
-      if (!activeSubscription) {
-        throw new AppError('Aluno não possui assinatura ativa para realizar a troca.', 400);
+      if (!subscription) {
+        throw new AppError('Assinatura ativa não encontrada para alteração.', 404);
       }
 
       // 2️⃣ Valida novo plano
@@ -122,34 +107,56 @@ export class SubscriptionService {
       }
 
       // 3️⃣ Encerra assinatura atual
-      activeSubscription.status = 'CANCELED';
-      activeSubscription.end_date = new Date();
-      await activeSubscription.save({ transaction: t });
+      await subscription.update({
+        status: 'CANCELED',
+        end_date: new Date()
+      }, { transaction: t });
 
-      // 4️⃣ Cria nova assinatura
+      // 4️⃣ Cria nova assinatura vinculada
       const startDate = new Date();
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + newPlan.duration_days);
 
-      const newSubscription = await Subscription.create({
+      return await Subscription.create({
         tenant_id: tenantId,
-        student_id: studentId,
+        student_id: subscription.student_id,
         plan_id: newPlanId,
         price: newPlan.price,
         start_date: startDate,
         end_date: endDate,
         status: 'ACTIVE',
       }, { transaction: t });
-
-      return {
-        previous: activeSubscription,
-        current: newSubscription,
-      };
     });
   }
 
   /**
-   * EXPIRE SUBSCRIPTIONS (Cron Job)
+   * CANCELAR MATRÍCULA
+   */
+  async cancel(id: string, tenantId: string) {
+    const subscription = await Subscription.findOne({
+      where: { id, tenant_id: tenantId },
+    });
+
+    if (!subscription) {
+      throw new AppError('Assinatura não encontrada nesta unidade.', 404);
+    }
+
+    if (subscription.status !== 'ACTIVE') {
+      throw new AppError('Esta assinatura já não está mais ativa.', 400);
+    }
+
+    try {
+      return await subscription.update({
+        status: 'CANCELED',
+        end_date: new Date()
+      });
+    } catch (error) {
+      throw new AppError('Erro ao cancelar a assinatura.', 500);
+    }
+  }
+
+  /**
+   * EXPIRE SUBSCRIPTIONS (Rotina Automática)
    */
   async expireSubscriptions() {
     try {
@@ -166,15 +173,7 @@ export class SubscriptionService {
       return expiredCount;
     } catch (error) {
       console.error('❌ Erro no Job de Expiração:', error);
-      // Aqui não lançamos AppError pois roda em background, apenas logamos.
       return 0;
     }
-  }
-
-  async listByStudent(studentId: string, tenantId: string) {
-    return Subscription.findAll({
-      where: { student_id: studentId, tenant_id: tenantId },
-      order: [['created_at', 'DESC']],
-    });
   }
 }

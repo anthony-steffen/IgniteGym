@@ -9,7 +9,7 @@
     "start": "npx sequelize-cli db:migrate && node dist/server.js",
     "start:log": "node scripts/start-log.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --poll src/server.ts",
     "ts:config": "npx tsc --init",
     "db:create": "npx sequelize-cli db:create",
     "db:drop": "npx sequelize-cli db:drop",

@@ -4,54 +4,48 @@ const bcrypt = require('bcrypt');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 🔍 Verifica se o tenant já existe pelo slug
-    const [existingTenants] = await queryInterface.sequelize.query(
-      "SELECT id FROM tenants WHERE slug = 'academia-principal' LIMIT 1"
-    );
-
-    let tenantId;
-
-    if (existingTenants.length > 0) {
-      tenantId = existingTenants[0].id;
-    } else {
-      tenantId = uuidv4();
-      await queryInterface.bulkInsert('tenants', [{
-        id: tenantId,
-        name: 'Academia Principal',
-        slug: 'academia-principal',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-      }]);
-    }
-
     const passwordHash = await bcrypt.hash('admin123', 10);
 
-    // 🔍 Verifica se o usuário admin já existe
-    const [existingUsers] = await queryInterface.sequelize.query(
-      `SELECT id FROM users WHERE email = 'admin@ignitegym.com' LIMIT 1`
-    );
+    // --- 1. CRIAR A ACADEMIA DE TESTE (TENANT) ---
+    const tenantId = uuidv4();
+    await queryInterface.bulkInsert('tenants', [{
+      id: tenantId,
+      name: 'Academia Principal',
+      slug: 'academia-principal',
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }]);
 
-    if (existingUsers.length === 0) {
-      await queryInterface.bulkInsert('users', [{
+    // --- 2. CRIAR OS USUÁRIOS ---
+    await queryInterface.bulkInsert('users', [
+      {
         id: uuidv4(),
-        tenant_id: null,
-        email: 'admin@ignitegym.com',
+        tenant_id: null, // GLOBAL - Regra 1
+        email: 'super@ignitegym.com',
         password_hash: passwordHash,
         role: 'ADMIN',
-        name: 'Administrador Geral',
+        name: 'Super Admin Sistema',
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
-      }]);
-    }
+      },
+      {
+        id: uuidv4(),
+        tenant_id: tenantId, // VINCULADO - Regra 2
+        email: 'dono@academia.com',
+        password_hash: passwordHash,
+        role: 'ADMIN',
+        name: 'Dono da Unidade',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+    ]);
   },
+
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('users', {
-      email: 'admin@ignitegym.com',
-    });
-    await queryInterface.bulkDelete('tenants', {
-      slug: 'academia-principal',
-    });
-  },
+    await queryInterface.bulkDelete('users', null, {});
+    await queryInterface.bulkDelete('tenants', null, {});
+  }
 };

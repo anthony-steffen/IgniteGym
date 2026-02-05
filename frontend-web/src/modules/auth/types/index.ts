@@ -7,6 +7,7 @@ export interface User {
 }
 
 export interface AuthResponse {
+  slug: string;
   token: string;
   user: User;
 }

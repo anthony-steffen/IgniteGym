@@ -1,169 +1,124 @@
-import { sequelize } from '../../database/sequelize';
-import { User } from '../../database/models/user.model';
-import { Employee } from '../../database/models/employee.model';
-import { Tenant } from '../../database/models/tenant.model';
-import bcrypt from 'bcrypt';
-import { AppError } from '../../errors/AppError';
+// src/modules/staff/staff.service.ts
+import bcrypt from "bcrypt";
+import { sequelize } from "../../database/sequelize";
+import { User } from "../../database/models/user.model";
+import { Tenant } from "../../database/models/tenant.model";
+import { Employee } from "../../database/models/employee.model";
+import { AppError } from "../../errors/AppError";
+
+const { v4: uuidv4 } = require('uuid');
 
 export class StaffService {
   /**
-   * CRIAÇÃO DE STAFF / AUTO-REGISTRO
-   * Unificado para suportar os novos campos de Employee (salário, jornada, etc)
+   * Fluxo A: Criação de Nova Academia + Admin
    */
   static async create(data: any) {
-    const {
-      tenantId,
-      email,
-      password,
-      name,
-      roleTitle,
-      gymName,
-      salary,
-      weeklyHours,
-      workSchedule
-    } = data;
+    const { name, email, password, gymName } = data;
 
-    // 1️⃣ Validação de e-mail global
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      throw new AppError('Este e-mail já está cadastrado no sistema.', 409);
-    }
+    const userExists = await User.findOne({ where: { email } });
+    if (userExists) throw new AppError("E-mail já cadastrado.", 400);
 
     const transaction = await sequelize.transaction();
 
     try {
-      let finalTenantId = tenantId;
+      const slug = gymName.toLowerCase().trim().replace(/\s+/g, '-');
+      
+      const tenant = await Tenant.create({
+        id: uuidv4(),
+        name: gymName,
+        slug,
+        is_active: true,
+        timezone: 'America/Sao_Paulo',
+      }, { transaction });
 
-      // 2️⃣ Se for um novo registro de academia (Dono), cria o Tenant primeiro
-      if (!finalTenantId && gymName) {
-        const newTenant = await Tenant.create({
-          name: gymName,
-          slug: gymName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''), // Gera slug amigável
-          timezone: 'America/Sao_Paulo', // Valor padrão obrigatório
-          is_active: true
-        }, { transaction });
-        finalTenantId = newTenant.id;
-      }
-
-      if (!finalTenantId) {
-        throw new AppError('ID da unidade ou nome da academia é obrigatório.', 400);
-      }
-
-      // 3️⃣ Criar o Usuário
-      const passwordHash = await bcrypt.hash(password, 8);
       const user = await User.create({
+        id: uuidv4(),
         name,
         email,
-        password_hash: passwordHash,
-        tenant_id: finalTenantId,
-        role: roleTitle === 'GERENTE' || gymName ? 'ADMIN' : 'STAFF',
+        password_hash: await bcrypt.hash(password, 10),
+        role: 'ADMIN',
+        tenant_id: tenant.id,
+        is_active: true
       }, { transaction });
 
-      // 4️⃣ Criar o Perfil de Funcionário (Employee) associado
-      // Aqui usamos a estrutura robusta que definimos para o RH
       await Employee.create({
+        id: uuidv4(),
         user_id: user.id,
-        tenant_id: finalTenantId,
-        role_title: roleTitle || (gymName ? 'Proprietário' : 'Funcionário'),
-        is_active: true,
-        salary: salary || 0,
-        weekly_hours: weeklyHours || 44,
-        work_schedule: workSchedule || {}, 
+        tenant_id: tenant.id,
+        role_title: 'Proprietário',
+        is_active: true
       }, { transaction });
 
       await transaction.commit();
-
-      // Retornar o usuário com o perfil de funcionário incluído
-      return await User.findByPk(user.id, {
-        include: [{ model: Employee, as: 'employee' }]
-      });
-
-    } catch (error: any) {
+      return { id: user.id, name: user.name, slug: tenant.slug };
+    } catch (error) {
       await transaction.rollback();
-      if (error instanceof AppError) throw error;
-      throw new AppError(`Erro no registro: ${error.message}`, 500);
+      throw error;
     }
   }
 
-  /**
-   * BUSCA TODOS OS MEMBROS (Utilizado para compatibilidade, mas o EmployeeService.listAll é o preferencial)
-   */
   static async list(tenantId: string) {
-    return await User.findAll({
-      where: { tenant_id: tenantId },
-      include: [{ model: Employee, as: 'employee', required: true }],
-      attributes: { exclude: ['password_hash'] },
-      order: [['name', 'ASC']]
+    return await Employee.findAll({
+      where: { tenant_id: tenantId, is_active: true },
+      include: [{ 
+        model: User, 
+        as: 'user', 
+        attributes: ['id', 'name', 'email', 'role'] 
+      }]
     });
   }
 
-  /**
-   * BUSCA DETALHADA
-   */
-  static async findOne(userId: string) {
-    const user = await User.findByPk(userId, {
-      include: [{ model: Employee, as: 'employee' }],
-      attributes: { exclude: ['password_hash'] }
+  static async findOne(id: string, tenantId: string) {
+    const employee = await Employee.findOne({
+      where: { id, tenant_id: tenantId },
+      include: [{ model: User, as: 'user' }]
     });
 
-    if (!user) {
-      throw new AppError('Usuário não encontrado.', 404);
-    }
-
-    return user;
+    if (!employee) throw new AppError("Colaborador não encontrado.", 404);
+    return employee;
   }
 
-  /**
-   * ATUALIZAÇÃO DE DADOS (Unificado com a lógica de Employee)
-   */
-  static async update(userId: string, data: any) {
-    const user = await User.findByPk(userId, {
-      include: [{ model: Employee, as: 'employee' }],
-    });
-
-    if (!user) {
-      throw new AppError('Usuário não encontrado.', 404);
-    }
-
+  static async update(id: string, tenantId: string, data: any) {
+    const employee = await this.findOne(id, tenantId);
+    
+    // Inicia transação caso precise atualizar User e Employee simultaneamente
     const transaction = await sequelize.transaction();
-
     try {
-      await user.update({
-        name: data.name ?? user.name,
-      }, { transaction });
-
-      if (user.employee) {
-        await user.employee.update({
-          role_title: data.roleTitle ?? user.employee.role_title,
-          salary: data.salary ?? user.employee.salary,
-          weekly_hours: data.weeklyHours ?? user.employee.weekly_hours,
-          work_schedule: data.workSchedule ?? user.employee.work_schedule,
-          is_active: data.isActive ?? user.employee.is_active,
-        }, { transaction });
+      if (data.name || data.email) {
+        await User.update(
+          { name: data.name, email: data.email },
+          { where: { id: employee.user_id }, transaction }
+        );
       }
 
+      await employee.update(
+        { role_title: data.role_title, is_active: data.is_active },
+        { transaction }
+      );
+
       await transaction.commit();
-      return user;
-    } catch (error: any) {
+      return await this.findOne(id, tenantId);
+    } catch (error) {
       await transaction.rollback();
-      throw new AppError(`Erro ao atualizar os dados: ${error.message}`, 500);
+      throw error;
     }
   }
 
-  /**
-   * DESATIVAÇÃO (Soft Delete)
-   */
-  static async deactivate(userId: string) {
-    const user = await User.findByPk(userId, {
-      include: [{ model: Employee, as: 'employee' }],
-    });
-
-    if (!user) {
-      throw new AppError('Membro não encontrado para desativação.', 404);
-    }
-
-    if (user.employee) {
-      await user.employee.update({ is_active: false });
+  static async deactivate(id: string, tenantId: string) {
+    const employee = await this.findOne(id, tenantId);
+    
+    const transaction = await sequelize.transaction();
+    try {
+      // Desativa o funcionário e o acesso do usuário
+      await employee.update({ is_active: false }, { transaction });
+      await User.update(
+        { is_active: false },
+        { where: { id: employee.user_id }, transaction }
+      );
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
   }
 }

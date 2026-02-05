@@ -1,22 +1,27 @@
 import { Router } from 'express';
 import { SubscriptionController } from './subscription.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
+import { tenantTranslate } from '../../middlewares/tenantTranslate';
+import { roleMiddleware } from '../../middlewares/roleMiddleware';
 
-const routes = Router();
+const router = Router();
 const controller = new SubscriptionController();
 
-routes.use(authMiddleware);
+// Tradutor de slug para tenantId (UUID)
+router.param('slug', tenantTranslate);
 
-// criar assinatura
-routes.post('/', controller.create.bind(controller));
+router.use(authMiddleware);
 
-// listar assinaturas do aluno
-routes.get(
-  '/students/:studentId',
-  controller.listByStudent.bind(controller)
-);
+// GET /subscriptions/academia-exemplo -> Lista matrículas da unidade
+router.get('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.list);
 
-// cancelar assinatura
-routes.delete('/:id', controller.cancel.bind(controller));
+// POST /subscriptions/academia-exemplo -> Matricula um aluno em um plano
+router.post('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.create);
 
-export default routes;
+// PUT /subscriptions/academia-exemplo/:id -> Renova ou altera matrícula
+router.put('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.update);
+
+// DELETE /subscriptions/academia-exemplo/:id -> Cancela matrícula
+router.delete('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.cancel);
+
+export default router;

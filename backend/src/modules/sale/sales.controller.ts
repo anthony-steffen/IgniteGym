@@ -5,31 +5,51 @@ const salesService = new SalesService();
 
 export class SalesController {
   async create(req: Request, res: Response) {
-    const { tenantId } = req.params;
-    // Assume que o employeeId vem do token de autenticação (req.user.id)
-    // Para o teste inicial, podemos enviar no body ou params
-    const { studentId, employeeId, items, paymentMethod } = req.body;
+    try {
+      // tenantId resolvido pelo middleware via slug
+      const tenantId = req.tenantId as string;
+      
+      // employeeId extraído com segurança do Token JWT
+      const employeeId = req.user.id; 
+      
+      const { studentId, items, paymentMethod } = req.body;
 
-    const sale = await salesService.createSale({
-      tenantId,
-      studentId,
-      employeeId,
-      items,
-      paymentMethod,
-    });
+      const sale = await salesService.createSale({
+        tenantId,
+        studentId,
+        employeeId,
+        items,
+        paymentMethod,
+      });
 
-    return res.status(201).json(sale);
+      return res.status(201).json(sale);
+    } catch (error: any) {
+      return res.status(500).json({ 
+        status: "error", 
+        message: error.message || "Erro ao processar a venda." 
+      });
+    }
   }
 
   async list(req: Request, res: Response) {
-    const { tenantId } = req.params;
-    // Implementação básica de listagem
-    const { Sale } = require('../../database/models/sale.model');
-    const sales = await Sale.findAll({
-      where: { tenant_id: tenantId },
-      include: ['items'],
-      order: [['created_at', 'DESC']],
-    });
-    return res.json(sales);
+    try {
+      const tenantId = req.tenantId as string;
+
+      // Importação dinâmica do modelo (mantendo seu padrão)
+      const { Sale } = require('../../database/models/sale.model');
+      
+      const sales = await Sale.findAll({
+        where: { tenant_id: tenantId },
+        include: ['items'],
+        order: [['created_at', 'DESC']],
+      });
+
+      return res.json(sales);
+    } catch (error: any) {
+      return res.status(500).json({ 
+        status: "error", 
+        message: error.message || "Erro ao listar vendas." 
+      });
+    }
   }
 }

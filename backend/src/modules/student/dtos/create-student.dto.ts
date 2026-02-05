@@ -1,5 +1,5 @@
 export interface CreateStudentDTO {
-  tenantId: string;
+  slug: string;
   name: string;
   email: string;
   phone?: string;

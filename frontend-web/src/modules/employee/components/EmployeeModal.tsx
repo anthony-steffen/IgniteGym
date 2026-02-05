@@ -7,16 +7,16 @@ import { useEmployees } from "../../../hooks/useEmployees";
 interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  tenantId: string;
+  slug: string;
   selectedEmployee?: any;
 }
 
-export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: EmployeeModalProps) {
-  const { eligibleUsers, createEmployee, updateEmployee } = useEmployees(tenantId);
+export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: EmployeeModalProps) {
+  const { eligibleUsers, createEmployee, updateEmployee } = useEmployees(slug);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "promote">("create");
 
-  const initialFormState = {  
+  const initialFormState = {   
     userId: "",
     name: "",
     email: "",
@@ -62,7 +62,6 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
 
     try {
       if (selectedEmployee) {
-        // Correção aqui: Enviando exatamente como o hook useEmployees espera
         await updateEmployee({
           id: selectedEmployee.id,
           payload: {
@@ -74,7 +73,6 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
         });
         toast.success("Dados atualizados com sucesso!");
       } else {
-        // Criação unificada
         const payload = mode === "promote" 
           ? { 
               userId: formData.userId,
@@ -82,7 +80,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
               salary: formData.salary,
               weeklyHours: formData.weeklyHours,
               workSchedule: formData.workSchedule,
-              tenantId 
+              slug 
             } 
           : { 
               name: formData.name,
@@ -92,7 +90,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
               salary: formData.salary,
               weeklyHours: formData.weeklyHours,
               workSchedule: formData.workSchedule,
-              tenantId 
+              slug 
             };
 
         await createEmployee(payload as any);
@@ -144,7 +142,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-base-200/30 p-4 rounded-xl border border-base-200">
             {mode === "promote" && !selectedEmployee ? (
               <div className="form-control md:col-span-2">
-                <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Localizar Usuário/Aluno</span></label>
+                <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Localizar Usuário</span></label>
                 <select 
                   className="select select-bordered select-sm w-full font-bold" 
                   value={formData.userId} 
@@ -182,7 +180,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                 </div>
                 {!selectedEmployee && mode === "create" && (
                   <div className="form-control md:col-span-2">
-                    <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Senha de Acesso</span></label>
+                    <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Senha</span></label>
                     <input 
                       type="password" 
                       className="input input-bordered input-sm font-bold" 
@@ -198,7 +196,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Cargo / Função</span></label>
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Cargo</span></label>
               <select 
                 className="select select-bordered select-sm font-bold text-primary" 
                 value={formData.roleTitle} 
@@ -207,39 +205,29 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
                 <option value="INSTRUTOR">INSTRUTOR</option>
                 <option value="GERENTE">GERENTE</option>
                 <option value="RECEPCIONISTA">RECEPCIONISTA</option>
-                <option value="ESTAGIÁRIO">ESTAGIÁRIO</option>
               </select>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Salário Base (R$)</span></label>
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500 text-success">Salário</span></label>
               <div className="relative">
                 <DollarSign size={14} className="absolute left-3 top-2.5 text-success" />
                 <input 
                   type="number" 
-                  step="0.01"
                   className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.salary === 0 ? "" : formData.salary} 
-                  placeholder="0"
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData({ ...formData, salary: val === "" ? 0 : Number(val) });
-                  }} 
+                  value={formData.salary || ""} 
+                  onChange={(e) => setFormData({ ...formData, salary: Number(e.target.value) })} 
                 />
               </div>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Horas Semanais</span></label>
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500 text-info">Horas</span></label>
               <div className="relative">
                 <Clock size={14} className="absolute left-3 top-2.5 text-info" />
                 <input 
                   type="number" 
                   className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.weeklyHours === 0 ? "" : formData.weeklyHours} 
-                  placeholder="0"
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData({ ...formData, weeklyHours: val === "" ? 0 : Number(val) });
-                  }} 
+                  value={formData.weeklyHours || ""} 
+                  onChange={(e) => setFormData({ ...formData, weeklyHours: Number(e.target.value) })} 
                 />
               </div>
             </div>
@@ -253,7 +241,7 @@ export function EmployeeModal({ isOpen, onClose, tenantId, selectedEmployee }: E
               disabled={loading}
             >
               {!loading && <Save size={16} />}
-              {selectedEmployee ? "Salvar Alterações" : "Confirmar Contratação"}
+              {selectedEmployee ? "Salvar" : "Contratar"}
             </button>
           </div>
         </form>

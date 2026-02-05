@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, ClipboardCheck, Settings, Menu, 
   UserCog, Package, ScrollText, DollarSign, UserPlus, 
@@ -9,22 +9,27 @@ import { api } from '../services/api';
 export function MainLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { slug } = useParams(); // 👈 1. Captura o slug da URL (ex: 'academia-principal')
 
   // Função de Logout
   const handleLogout = () => {
-    // 1. Limpa os dados de autenticação
     localStorage.removeItem('@IgniteGym:token');
     localStorage.removeItem('@IgniteGym:user');
-    
-    // 2. Remove o header de autorização do Axios
     delete api.defaults.headers.common['Authorization'];
-    
-    // 3. Redireciona para o login
     navigate('/login');
   };
 
-  // Função auxiliar para marcar item ativo
-  const isActive = (path: string) => pathname === path ? 'active bg-primary text-white' : '';
+  /**
+   * 2. Função auxiliar para gerar URLs dinâmicas com o slug
+   * Se o slug for 'academia-principal' e o path for 'home', retorna '/academia-principal/home'
+   */
+  const getPath = (path: string) => `/${slug}/${path}`;
+
+  /**
+   * 3. Função auxiliar para marcar item ativo
+   * Agora verifica se o pathname termina com o path desejado ou contém o slug
+   */
+  const isActive = (path: string) => pathname === getPath(path) ? 'active bg-primary text-white' : '';
 
   return (
     <div className="drawer md:drawer-open bg-base-200 min-h-screen">
@@ -39,10 +44,9 @@ export function MainLayout() {
             </label>
           </div>
           <div className="flex-1 px-2 font-bold italic uppercase tracking-tighter">
-            IGNITE<span className="text-primary">GYM</span> - Unidade Centro
+            IGNITE<span className="text-primary">GYM</span> - {slug?.replace(/-/g, ' ')} {/* 👈 Nome dinâmico */}
           </div>
 
-          {/* BOTÃO DE LOGOUT NO HEADER */}
           <div className="flex-none gap-2">
             <button 
               onClick={handleLogout}
@@ -68,63 +72,63 @@ export function MainLayout() {
              <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">IGNITEGYM</h1>
           </li>
 
-          {/* Links Mapeados */}
+          {/* 4. Links atualizados usando a função getPath */}
           <li>
-            <Link to="/home" className={`gap-4 p-3 ${isActive('/home')}`}>
+            <Link to={getPath('home')} className={`gap-4 p-3 ${isActive('home')}`}>
               <LayoutDashboard size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Geral</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/checkin" className={`gap-4 p-3 ${isActive('/checkin')}`}>
+            <Link to={getPath('checkin')} className={`gap-4 p-3 ${isActive('checkin')}`}>
               <ClipboardCheck size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Check-Ins</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/employee" className={`gap-4 p-3 ${isActive('/employee')}`}>
+            <Link to={getPath('employee')} className={`gap-4 p-3 ${isActive('employee')}`}>
               <UserCog size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Funcionários</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/products" className={`gap-4 p-3 ${isActive('/products')}`}>
+            <Link to={getPath('products')} className={`gap-4 p-3 ${isActive('products')}`}>
               <Package size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Produtos/Estoque</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/suppliers" className={`gap-4 p-3 ${isActive('/suppliers')}`}>
+            <Link to={getPath('suppliers')} className={`gap-4 p-3 ${isActive('suppliers')}`}>
               <Building2 size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Fornecedores</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/plans" className={`gap-4 p-3 ${isActive('/plans')}`}>
+            <Link to={getPath('plans')} className={`gap-4 p-3 ${isActive('plans')}`}>
               <ScrollText size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Planos</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/sales" className={`gap-4 p-3 ${isActive('/sales')}`}>
+            <Link to={getPath('sales')} className={`gap-4 p-3 ${isActive('sales')}`}>
               <DollarSign size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Vendas</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/students" className={`gap-4 p-3 ${isActive('/students')}`}>
+            <Link to={getPath('students')} className={`gap-4 p-3 ${isActive('students')}`}>
               <Users size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Alunos</span>
             </Link>
           </li>
 
           <li>
-            <Link to="/subscriptions" className={`gap-4 p-3 ${isActive('/subscriptions')}`}>
+            <Link to={getPath('subscriptions')} className={`gap-4 p-3 ${isActive('subscriptions')}`}>
               <UserPlus size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Inscrições</span>
             </Link>
           </li>
 
           <li className="mt-auto">
-            <Link to="/settings" className={`gap-4 p-3 border-t border-base-300 pt-4 ${isActive('/settings')}`}>
+            <Link to={getPath('settings')} className={`gap-4 p-3 border-t border-base-300 pt-4 ${isActive('settings')}`}>
               <Settings size={22} /> <span className="hidden lg:inline text-xs font-bold uppercase">Ajustes</span>
             </Link>
           </li>

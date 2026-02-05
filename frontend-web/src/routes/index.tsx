@@ -19,38 +19,34 @@ import { EmployeePage } from '../modules/employee/pages/EmployeePage';
 export function AppRoutes() {
   return (
     <Routes>
-      {/* 1. Rotas Públicas: Acessíveis sem login */}
+      {/* Rotas Públicas */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/settings" element={<UnitSettingsPage />} />
 
-      {/* 2. Rotas Protegidas: 
-          Tudo o que estiver dentro deste Route só carrega se passar no teste do ProtectedRoute 
+      {/* As rotas abaixo agora suportam o slug. 
+         A URL será: /academia-vitoria/home 
       */}
-      <Route element={<ProtectedRoute />}>
-        
-        {/* 3. Layout Base: 
-            O MainLayout fornece o Header e Sidebar. 
-            O Outlet dentro do MainLayout renderizará as páginas abaixo.
-        */}
+      <Route path="/:slug" element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/plans" element={<PlanPage />} />
-          <Route path="/students" element={<StudentPage />} />
-          <Route path="/products" element={<ProductPage />} />
-          <Route path="/sales" element={<SalesPage />} />
-          <Route path="/suppliers" element={<SupplierPage />} />
-          <Route path="/employee" element={<EmployeePage />} />
-          
-          <Route path="/checkin" element={<div className="p-4">Dashboard Check-in em breve...</div>} />
-          <Route path="/subscriptions" element={<div className="p-4">Dashboard Inscrições em breve...</div>} />
-          <Route path="/settings" element={<div className="p-4">Configurações em breve...</div>} />
+          <Route index element={<Navigate to="home" replace />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="plans" element={<PlanPage />} />
+          <Route path="students" element={<StudentPage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="sales" element={<SalesPage />} />
+          <Route path="suppliers" element={<SupplierPage />} />
+          <Route path="employee" element={<EmployeePage />} />
+          <Route path="settings" element={<UnitSettingsPage />} />
         </Route>
-
       </Route>
 
-      {/* Rota de "Não Encontrado" - Opcional */}
+      {/* Rota para o Super-Admin (sem slug) */}
+      <Route path="/admin" element={<ProtectedRoute />}>
+         <Route element={<MainLayout />}>
+            <Route path="dashboard" element={<div>Dashboard Global</div>} />
+         </Route>
+      </Route>
+
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

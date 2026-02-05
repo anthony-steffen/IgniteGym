@@ -1,69 +1,62 @@
 import { Request, Response } from 'express';
 import { SubscriptionService } from './subscription.service';
-import { CreateSubscriptionDTO } from './dtos/create-subscription.dto';
+import { AppError } from '../../errors/AppError';
 
 export class SubscriptionController {
-  private service = new SubscriptionService();
+  private service: SubscriptionService;
 
-  /**
-   * POST /subscriptions
-   */
-  async create(req: Request, res: Response) {
-    // Se for Admin, tenta pegar o tenantId do body
-    const tenantId = req.user?.tenantId || (req.body.tenantId as string);
-
-    if (!tenantId) {
-      return res.status(400).json({ message: 'Tenant ID é obrigatório para criar assinatura.' });
-    }
-
-    const { studentId, planId } = req.body as CreateSubscriptionDTO;
-
-    const subscription = await this.service.create({
-      tenantId: tenantId as string,
-      studentId,
-      planId,
-    });
-
-    return res.status(201).json(subscription);
+  constructor() {
+    this.service = new SubscriptionService();
   }
 
-  /**
-   * GET /students/:studentId/subscriptions
-   */
-  async listByStudent(req: Request, res: Response) {
-    // Busca do token ou da query (para Super-Admin)
-    const tenantId = req.user?.tenantId || (req.query.tenantId as string);
+  create = async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId as string;
+      
+      const subscription = await this.service.create({
+        ...req.body,
+        tenantId
+      });
 
-    if (!tenantId) {
-      return res.status(400).json({ message: 'Tenant ID não identificado.' });
+      return res.status(201).json(subscription);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
+  };
 
-    const { studentId } = req.params;
-
-    const subscriptions = await this.service.listByStudent(
-      studentId,
-      tenantId as string
-    );
-    
-    return res.json(subscriptions);
-  }
-
-  /**
-   * DELETE /subscriptions/:id
-   */
-  async cancel(req: Request, res: Response) {
-    const tenantId = req.user?.tenantId || (req.body.tenantId as string);
-    const { id } = req.params;
-
-    if (!tenantId) {
-      return res.status(400).json({ message: 'Tenant ID necessário para cancelamento.' });
+  list = async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId as string;
+      const subscriptions = await this.service.list(tenantId);
+      return res.json(subscriptions);
+    } catch (error: any) {
+      return res.status(500).json({ status: "error", message: error.message });
     }
+  };
 
-    await this.service.cancel({
-      subscriptionId: id,
-      tenantId: tenantId as string,
-    });
+  update = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId as string;
 
-    return res.status(204).send();
-  }
+      const subscription = await this.service.update(id, tenantId, req.body);
+      return res.json(subscription);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  };
+
+  cancel = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId as string;
+
+      await this.service.cancel(id, tenantId);
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ status: "error", message: error.message });
+    }
+  };
 }

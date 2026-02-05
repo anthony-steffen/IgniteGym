@@ -11,6 +11,7 @@ declare global {
 
     interface Request {
       user: User;
+      tenantId?: string; // 🟢 Adicionado para suportar tenantTranslate middleware
     }
   }
 }

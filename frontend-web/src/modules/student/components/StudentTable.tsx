@@ -24,22 +24,33 @@ export function StudentTable({ students, onEdit, onDelete }: StudentTableProps) 
               <tr key={student.id}>
                 <td>
                   <div className="flex flex-col">
-                    {/* Acesso corrigido para a estrutura do Sequelize include */}
+                    {/* Acesso mantido conforme estrutura do Sequelize include */}
                     <span className="font-bold text-sm">{student.user.name}</span>
                     <span className="text-[11px] text-gray-400">{student.user.email}</span>
                     <span className="text-[11px] text-gray-400">{student.user.phone}</span>
                   </div>
                 </td>
                 <td>
+                  {/* O status reflete o is_active do modelo student ou user conforme seu backend */}
                   <div className={`badge badge-sm font-bold ${
-                    student.is_active ? 'badge-success' : 'badge-error'
+                    student.user.is_active ? 'badge-success' : 'badge-error'
                   }`}>
-                    {student.is_active ? 'ATIVO' : 'INATIVO'}
+                    {student.user.is_active ? 'ATIVO' : 'INATIVO'}
                   </div>
                 </td>
                 <td className="flex-row justify-center space-x-2 text-center">
-                  <button onClick={() => onEdit(student)} className="btn-ghost btn-xs text-info"><Edit size={16} /></button>
-                  <button onClick={() => onDelete(student.id)} className="btn-ghost btn-xs text-error"><Trash2 size={16} /></button>
+                  <button 
+                    onClick={() => onEdit(student)} 
+                    className="btn btn-ghost btn-xs text-info p-0 h-auto min-h-0"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button 
+                    onClick={() => onDelete(student.id)} 
+                    className="btn btn-ghost btn-xs text-error p-0 h-auto min-h-0"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </td>
               </tr>
             ))}

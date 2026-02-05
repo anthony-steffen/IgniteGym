@@ -6,17 +6,32 @@ import { useAuth } from '../../../hooks/useAuth';
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading } = useAuth(); // Usando nosso hook
+  const { signIn, loading } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     try {
-      await signIn(email, password);
-      navigate('/home');
+      // 1. O signIn deve retornar os dados do usuário
+      const response: any = await signIn(email, password);
+      
+      // Tente pegar o slug diretamente da resposta ou do localStorage atualizado
+      const user = response?.user || JSON.parse(localStorage.getItem('@IgniteGym:user') || '{}');
+
+      if (user?.slug) {
+        // ✅ Agora esta rota EXISTE no AppRoutes: /academia-principal/home
+        navigate(`/${user.slug}/home`, { replace: true });
+      } else if (user?.role === 'ADMIN' && !user?.tenant_id) {
+        // Se for Super Admin
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        // Fallback caso algo dê errado no vínculo
+        navigate('/login');
+        alert("Usuário sem unidade vinculada. Verifique com o administrador.");
+      }
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Erro ao realizar login");
     }
   }
 

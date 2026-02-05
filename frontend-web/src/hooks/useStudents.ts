@@ -1,63 +1,64 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
-import type { Student, StudentFormData } from '../modules/student/types';
 
-export function useStudents() {
+/**
+ * Hook para gestão de alunos consumindo a API baseada em Slug
+ * @param slug O identificador amigável da unidade vindo da URL
+ */
+export function useStudents(slug?: string) {
   const queryClient = useQueryClient();
 
-  // LISTAGEM (Onde deu o erro 401)
-  const studentsQuery = useQuery<Student[]>({
-    queryKey: ['students'],
+  // 1. LISTAGEM (GET /students/:slug)
+  const studentsQuery = useQuery({
+    queryKey: ['students', slug],
     queryFn: async () => {
-      // Certifique-se de que a rota no backend é /students ou /student (conforme seu controller)
-      const response = await api.get('/students'); 
-      return response.data;
+      const { data } = await api.get(`/students/${slug}`);
+      return data;
     },
-    // Opcional: evita que o react-query tente buscar se o usuário não estiver logado
-    enabled: !!localStorage.getItem('@IgniteGym:token'), 
+    enabled: !!slug, // Só executa se o slug estiver presente
   });
 
-  // CRIAÇÃO
+  // 2. CRIAÇÃO (POST /students/:slug)
   const createStudentMutation = useMutation({
-    mutationFn: async (data: StudentFormData) => {
-      // O tenantId deve ser pego do contexto de autenticação ou decode do token
-      const tenantId = "seu-id-do-banco"; 
-      const response = await api.post('/students', { ...data, tenantId });
-      return response.data;
+    mutationFn: async (payload: any) => {
+      const { data } = await api.post(`/students/${slug}`, payload);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['students', slug] });
+    },
   });
 
-  // DESATIVAÇÃO
+  // 3. ATUALIZAÇÃO (PUT /students/:slug/:id)
+  const updateStudentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const { data: response } = await api.put(`/students/${slug}/${id}`, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students', slug] });
+    },
+  });
+
+  // 4. DESATIVAÇÃO (PATCH /students/:slug/:id/deactivate)
+  // Nota: O Controller usa StudentService.deactivate, geralmente mapeado para PATCH ou DELETE
   const deactivateStudentMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.patch(`/students/${id}/deactivate`);
+      const { data } = await api.patch(`/students/${slug}/${id}/deactivate`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
-    }
-  });
-
-  // ATUALIZAÇÃO
-  const updateStudentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: StudentFormData }) => {
-      // O backend agora espera o user_id no parâmetro 'id'
-      const response = await api.put(`/students/${id}`, data);
-      return response.data;
+      queryClient.invalidateQueries({ queryKey: ['students', slug] });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
-    }
   });
 
   return {
     students: studentsQuery.data ?? [],
     isLoading: studentsQuery.isLoading,
-    isError: studentsQuery.isError, // Útil para mostrar feedback de erro 401 na UI
+    isError: studentsQuery.isError,
     createStudent: createStudentMutation.mutateAsync,
-    deactivateStudent: deactivateStudentMutation.mutateAsync,
     updateStudent: updateStudentMutation.mutateAsync,
+    deactivateStudent: deactivateStudentMutation.mutateAsync,
   };
 }

@@ -1,43 +1,46 @@
-// src/modules/checkin/checkin.controller.ts
 import { Request, Response } from 'express';
-import { CheckInService } from './checkin.service';
-import { getTenantId } from '../../utils/getTenantId';
+import { CheckinService } from './checkin.service';
+import { AppError } from '../../errors/AppError';
 
-export class CheckInController {
-  private service: CheckInService;
+export class CheckinController {
+  private service: CheckinService;
 
   constructor() {
-    this.service = new CheckInService();
+    this.service = new CheckinService();
   }
 
-  async create(req: Request, res: Response) {
-    // Tenta pegar o ID do token ou do body (caso seja Super-Admin)
-    const tenantId = getTenantId(req) || (req.body.tenantId as string);
+  create = async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId as string;
+      const { studentId } = req.body;
 
-    if (!tenantId) {
-      return res.status(400).json({ 
-        message: 'Tenant ID é obrigatório para realizar check-in.' 
-      });
+      const checkin = await this.service.create(studentId, tenantId);
+      return res.status(201).json(checkin);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
+  };
 
-    const { studentId } = req.body;
-    
-    // Usamos 'as string' pois garantimos a existência acima
-    const checkIn = await this.service.create(tenantId as string, studentId);
-    return res.status(201).json(checkIn);
-  }
-
-  async listByStudent(req: Request, res: Response) {
-    const { studentId } = req.params; // Geralmente studentId vem da URL (params) e não do body em GETs
-    const tenantId = getTenantId(req) || (req.query.tenantId as string);
-
-    if (!tenantId) {
-      return res.status(400).json({ 
-        message: 'Tenant ID não identificado.' 
-      });
+  list = async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId as string;
+      const checkins = await this.service.list(tenantId);
+      return res.json(checkins);
+    } catch (error: any) {
+      return res.status(500).json({ status: "error", message: error.message });
     }
+  };
 
-    const checkIns = await this.service.listByStudent(tenantId as string, studentId);
-    return res.json(checkIns);
-  }
+  listByStudent = async (req: Request, res: Response) => {
+    try {
+      const { studentId } = req.params;
+      const tenantId = req.tenantId as string;
+      
+      const checkins = await this.service.listByStudent(studentId, tenantId);
+      return res.json(checkins);
+    } catch (error: any) {
+      return res.status(500).json({ status: "error", message: error.message });
+    }
+  };
 }

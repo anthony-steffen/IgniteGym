@@ -3,14 +3,10 @@ import { EmployeeService } from './employee.service';
 import { AppError } from '../../errors/AppError';
 
 export class EmployeeController {
-  /**
-   * CRIAÇÃO / CONTRATAÇÃO
-   * Trata tanto o registro de novos usuários quanto a promoção de alunos a funcionários.
-   */
   static async create(req: Request, res: Response) {
     try {
-      // O tenantId pode vir da URL (via hook) ou do body
-      const tenantId = req.params.tenantId || req.body.tenantId;
+      // tenantId extraído do middleware tenantTranslate via slug
+      const tenantId = req.tenantId as string;
       
       const employee = await EmployeeService.create({
         ...req.body,
@@ -27,17 +23,9 @@ export class EmployeeController {
     }
   }
 
-  /**
-   * LISTAGEM DE FUNCIONÁRIOS
-   * Retorna a lista de Employees com os dados de User incluídos.
-   */
   static async list(req: Request, res: Response) {
     try {
-      const { tenantId } = req.params;
-
-      if (!tenantId) {
-        throw new AppError("O ID da unidade é obrigatório.", 400);
-      }
+      const tenantId = req.tenantId as string;
 
       const employees = await EmployeeService.list(tenantId);
       return res.json(employees);
@@ -50,13 +38,9 @@ export class EmployeeController {
     }
   }
 
-  /**
-   * USUÁRIOS ELEGÍVEIS
-   * Lista usuários que pertencem ao tenant mas ainda não são funcionários.
-   */
   static async listEligibleUsers(req: Request, res: Response) {
     try {
-      const { tenantId } = req.params;
+      const tenantId = req.tenantId as string;
       const users = await EmployeeService.listEligibleUsers(tenantId);
       return res.json(users);
     } catch (error: any) {
@@ -67,13 +51,9 @@ export class EmployeeController {
     }
   }
 
-  /**
-   * ATUALIZAÇÃO UNIFICADA
-   * Atualiza dados de cargo, salário e horários no Employee, e nome no User.
-   */
   static async update(req: Request, res: Response) {
     try {
-      const { id } = req.params; // ID do Employee
+      const { id } = req.params; // ID do Employee continua sendo UUID
       const employee = await EmployeeService.update(id, req.body);
       
       return res.json(employee);
@@ -86,9 +66,6 @@ export class EmployeeController {
     }
   }
 
-  /**
-   * DESATIVAÇÃO / REMOÇÃO
-   */
   static async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
