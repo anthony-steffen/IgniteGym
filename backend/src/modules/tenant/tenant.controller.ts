@@ -7,19 +7,16 @@ export class TenantController {
     return res.status(201).json(result);
   }
 
-  // Novo: Listar todas as unidades (Uso exclusivo do Super Admin)
   static async list(req: Request, res: Response) {
     const tenants = await TenantService.findAll();
     return res.json(tenants);
   }
 
   static async show(req: Request, res: Response) {
-    // Se for ADMIN e não tiver tenantId no token, ele pode querer ver uma específica via Query Param
-    // Se for MANAGER, usamos o tenantId do Token
-    const tenantId = req.user.tenantId || (req.query.id as string);
+    const tenantId = req.tenantId; // Injetado pelo tenantTranslate via slug
 
     if (!tenantId) {
-      return res.status(400).json({ message: 'ID da unidade é necessário para Admin Global' });
+      return res.status(400).json({ message: 'Contexto da unidade não identificado.' });
     }
 
     const tenant = await TenantService.show(tenantId);
@@ -27,18 +24,28 @@ export class TenantController {
   }
 
   static async update(req: Request, res: Response) {
-    // Prioriza o ID enviado no body (se for Admin) ou o ID do Token (se for Manager)
-    const id = req.user.role === 'ADMIN' ? req.body.id : req.user.tenantId;
+    const tenantId = req.tenantId; // Injetado pelo tenantTranslate via slug
+    const updateData = req.body;
 
-    if (!id) return res.status(400).json({ message: 'ID não identificado' });
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Contexto da unidade não identificado.' });
+    }
 
-    const result = await TenantService.update(id, req.body);
+    // Limpeza de dados: impede que o usuário altere campos sensíveis via update comum
+    const { id, slug, created_at, ...validData } = updateData;
+
+    const result = await TenantService.update(tenantId, validData);
     return res.json(result);
   }
 
   static async delete(req: Request, res: Response) {
-    const { id } = req.params;
-    const result = await TenantService.delete(id);
-    return res.json(result);
+    const tenantId = req.tenantId;
+
+    if (!tenantId) {
+      return res.status(400).json({ message: 'Contexto da unidade não identificado.' });
+    }
+
+    await TenantService.delete(tenantId);
+    return res.status(204).send();
   }
 }

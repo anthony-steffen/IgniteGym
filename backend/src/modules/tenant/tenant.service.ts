@@ -26,14 +26,12 @@ export class TenantService {
 
         const password_hash = await bcrypt.hash(data.admin_password, 8);
 
-        // O usuário criado aqui é o MANAGER da unidade, não o SUPER ADMIN
         const user = await User.create({
           tenant_id: tenant.id,
           name: data.admin_name,
           email: data.admin_email,
           password_hash,
-          role: 'MANAGER', // Alterado de ADMIN para MANAGER para diferenciar do SuperAdmin
-          is_active: true,
+          role: 'MANAGER', 
         }, { transaction: t });
 
         return { tenant, admin: { id: user.id, name: user.name, email: user.email } };
@@ -54,15 +52,17 @@ export class TenantService {
     return tenant;
   }
   
-  static async update(id: string, data: Partial<CreateTenantDTO>) {
+  static async update(id: string, data: any) {
     const tenant = await Tenant.findByPk(id);
     if (!tenant) throw new AppError('Academia não encontrada.', 404);
 
+    // Se houver tentativa de mudar o slug, verificamos disponibilidade
     if (data.slug && data.slug !== tenant.slug) {
       const slugExists = await Tenant.findOne({ where: { slug: data.slug } });
       if (slugExists) throw new AppError('Este slug já está em uso.', 409);
     }
 
+    // Atualiza apenas os campos permitidos enviados no objeto data
     await tenant.update(data);
     return tenant;
   }
@@ -73,12 +73,12 @@ export class TenantService {
 
     try {
       return await sequelize.transaction(async (t) => {
+        // Remove todos os usuários vinculados à unidade antes de remover a unidade
         await User.destroy({ where: { tenant_id: id }, transaction: t });
         await tenant.destroy({ transaction: t });
-        return { message: 'Unidade e usuários removidos com sucesso.' };
       });
     } catch (error) {
-      throw new AppError('Erro ao excluir unidade.', 500);
+      throw new AppError('Erro ao excluir unidade e seus dados.', 500);
     }
   }
 }

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { TenantController } from './tenant.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
 import { roleMiddleware } from '../../middlewares/roleMiddleware';
-import { tenantTranslate } from '../../middlewares/tenantTranslate'; // 👈 Importar o tradutor
+import { tenantTranslate } from '../../middlewares/tenantTranslate';
 
 const router = Router();
 
@@ -11,17 +11,16 @@ router.post('/register', TenantController.register);
 
 router.use(authMiddleware);
 
-// Configura o tradutor de slug para as rotas que usarem :slug
+// Configura o tradutor de slug: Sempre que houver ':slug', o req.tenantId será preenchido
 router.param('slug', tenantTranslate);
 
-// 1. Apenas o SUPER ADMIN lista todas as unidades
+// 1. Apenas o SUPER ADMIN (Role: ADMIN) lista todas as unidades
 router.get('/', roleMiddleware(['ADMIN']), TenantController.list);
 
-// 2. ROTA NORMALIZADA: Retorna os dados da unidade pelo slug
-// Manager acessa a sua, Admin acessa qualquer uma
+// 2. Detalhes da Unidade (Dono vê a sua, Super Admin vê qualquer uma via slug)
 router.get('/:slug', TenantController.show); 
 
-// 3. ROTA NORMALIZADA: Atualiza via slug
+// 3. Atualização da Unidade (Dono atualiza a sua, Super Admin atualiza qualquer uma)
 router.put('/:slug', TenantController.update);
 
 // 4. Exclusão (Apenas Super Admin)
