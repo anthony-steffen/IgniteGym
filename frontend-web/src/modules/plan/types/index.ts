@@ -1,3 +1,4 @@
+// src/modules/plan/types/index.ts  
 export interface Plan {
   id: string;
   name: string;

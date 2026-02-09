@@ -15,6 +15,7 @@ import { UnitSettingsPage } from '../modules/tenant/pages/UnitSettingsPage';
 import { ProtectedRoute } from '../shared/ProtectedRoute';
 import { MainLayout } from '../shared/Mainlayout';
 import { EmployeePage } from '../modules/employee/pages/EmployeePage';
+import { CheckinPage } from '../modules/checkin/pages/CheckinPage';
 
 export function AppRoutes() {
   return (
@@ -37,6 +38,7 @@ export function AppRoutes() {
           <Route path="suppliers" element={<SupplierPage />} />
           <Route path="employee" element={<EmployeePage />} />
           <Route path="settings" element={<UnitSettingsPage />} />
+          <Route path="checkin" element={<CheckinPage />} />
         </Route>
       </Route>
 
