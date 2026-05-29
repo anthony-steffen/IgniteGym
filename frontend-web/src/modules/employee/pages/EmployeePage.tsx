@@ -16,6 +16,7 @@ import {
 import { useEmployees } from "../../../hooks/useEmployees";
 import { EmployeeModal } from "../components/EmployeeModal";
 import type { Employee } from "../types";
+import { IconActionButton } from "../../../shared/components/IconActionButton";
 
 export function EmployeePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -86,14 +87,14 @@ export function EmployeePage() {
           <h1 className="text-2xl font-black italic uppercase tracking-tighter text-base-content">
             Equipe <span className="text-primary">| {slug?.replace(/-/g, " ")}</span>
           </h1>
-          <p className="text-xs font-bold text-gray-500 uppercase">
+          <p className="text-xs font-bold text-base-content/60 uppercase">
             Gerencie instrutores, administradores e staff
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" size={18} />
             <input
               type="text"
               placeholder="Buscar funcionario..."
@@ -161,27 +162,33 @@ export function EmployeePage() {
                 </td>
                 <td className="text-right">
                   <div className="flex justify-end gap-1">
-                    <button onClick={() => handleEdit(employee)} className="btn btn-square btn-ghost btn-sm">
-                      <Edit2 size={16} />
-                    </button>
+                    <IconActionButton
+                      label="Editar funcionario"
+                      tone="info"
+                      size="sm"
+                      onClick={() => handleEdit(employee)}
+                      icon={<Edit2 size={16} />}
+                    />
                     {employee.is_active ? (
-                      <button
+                      <IconActionButton
+                        label="Desativar funcionario"
+                        tone="error"
+                        size="sm"
                         onClick={() => {
                           if (confirm(`Remover ${employee.user?.name}?`)) deleteEmployee(employee.id);
                         }}
-                        className="btn btn-square btn-ghost btn-sm text-error"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        icon={<Trash2 size={16} />}
+                      />
                     ) : (
-                      <button
+                      <IconActionButton
+                        label="Reativar funcionario"
+                        tone="success"
+                        size="sm"
                         onClick={() => {
                           if (confirm(`Reativar ${employee.user?.name}?`)) reactivateEmployee(employee.id);
                         }}
-                        className="btn btn-square btn-ghost btn-sm text-success"
-                      >
-                        <RotateCcw size={16} />
-                      </button>
+                        icon={<RotateCcw size={16} />}
+                      />
                     )}
                   </div>
                 </td>

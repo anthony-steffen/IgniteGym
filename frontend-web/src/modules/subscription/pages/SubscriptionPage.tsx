@@ -17,6 +17,7 @@ import { useStudents } from '../../../hooks/useStudents';
 import { useSubscriptions } from '../../../hooks/useSubscriptions';
 import type { PaymentStatus, Subscription, SubscriptionStatus } from '../types';
 import type { Student } from '../../student/types';
+import { IconActionButton } from '../../../shared/components/IconActionButton';
 
 interface ApiErrorResponse {
   message?: string;
@@ -223,8 +224,8 @@ export function SubscriptionPage() {
         <div className="flex items-start gap-3">
           <BadgeCheck size={34} className="text-primary" />
           <h1 className="text-2xl font-black italic uppercase tracking-tighter">
-            Inscricoes <span className="text-gray-400">| {slug}</span>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            Inscricoes <span className="text-base-content/60">| {slug}</span>
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
               Matriculas, planos ativos e pagamento
             </p>
           </h1>
@@ -327,7 +328,7 @@ export function SubscriptionPage() {
         <div className="overflow-x-auto">
           <table className="table table-zebra w-full">
             <thead>
-              <tr className="bg-base-200/70 text-[10px] uppercase tracking-widest text-gray-500">
+              <tr className="bg-base-200/70 text-[10px] uppercase tracking-widest text-base-content/60">
                 <th>Aluno</th>
                 <th>Plano</th>
                 <th>Valor</th>
@@ -346,7 +347,7 @@ export function SubscriptionPage() {
                 </tr>
               ) : filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs font-bold uppercase text-gray-400">
+                  <td colSpan={7} className="py-10 text-center text-xs font-bold uppercase text-base-content/60">
                     Nenhuma matricula encontrada para este filtro
                   </td>
                 </tr>
@@ -356,7 +357,7 @@ export function SubscriptionPage() {
                     <td>
                       <div className="flex flex-col">
                         <span className="font-bold text-sm">{subscription.student?.user?.name || 'Aluno'}</span>
-                        <span className="text-[11px] text-gray-400">{subscription.student?.user?.email}</span>
+                        <span className="text-[11px] text-base-content/60">{subscription.student?.user?.email}</span>
                       </div>
                     </td>
                     <td>
@@ -424,43 +425,39 @@ export function SubscriptionPage() {
                       <div className="flex justify-end gap-1">
                         {subscription.status === 'ACTIVE' && (
                           <>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-xs text-info"
+                            <IconActionButton
+                              label="Salvar alteracao de plano"
+                              tone="info"
                               disabled={isChangingPlan || (planDraftBySubscription[subscription.id] || subscription.plan_id) === subscription.plan_id}
                               onClick={() => handleChangePlan(subscription)}
-                            >
-                              <Save size={16} />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-xs text-error"
+                              icon={<Save size={16} />}
+                            />
+                            <IconActionButton
+                              label="Cancelar matricula"
+                              tone="error"
                               disabled={isCanceling}
                               onClick={() => handleCancel(subscription)}
-                            >
-                              <XCircle size={16} />
-                            </button>
+                              icon={<XCircle size={16} />}
+                            />
                           </>
                         )}
 
                         {subscription.status !== 'ACTIVE' && (
                           <>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-xs text-success"
+                            <IconActionButton
+                              label="Reativar matricula"
+                              tone="success"
                               disabled={isReactivating}
                               onClick={() => handleReactivate(subscription)}
-                            >
-                              <RefreshCcw size={16} />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-xs text-error"
+                              icon={<RefreshCcw size={16} />}
+                            />
+                            <IconActionButton
+                              label="Excluir matricula"
+                              tone="error"
                               disabled={isDeletingSubscription}
                               onClick={() => handleDeletePermanent(subscription)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                              icon={<Trash2 size={16} />}
+                            />
                           </>
                         )}
                       </div>

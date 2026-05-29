@@ -1,5 +1,6 @@
 import { Edit, RotateCcw, Trash2 } from 'lucide-react';
 import type { Plan } from '../types';
+import { IconActionButton } from '../../../shared/components/IconActionButton';
 
 interface PlanTableProps {
   plans: Plan[];
@@ -14,7 +15,7 @@ export function PlanTable({ plans, onEdit, onDeactivate, onReactivate }: PlanTab
       <div className="overflow-x-auto">
         <table className="table table-zebra w-full">
           <thead>
-            <tr className="bg-base-200 text-[10px] uppercase tracking-widest text-gray-500">
+            <tr className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/60">
               <th>Plano</th>
               <th>Duracao</th>
               <th>Valor</th>
@@ -36,17 +37,26 @@ export function PlanTable({ plans, onEdit, onDeactivate, onReactivate }: PlanTab
                   </span>
                 </td>
                 <td className="flex justify-center gap-2 p-3">
-                  <button onClick={() => onEdit(plan)} className="btn btn-ghost btn-xs text-info p-0">
-                    <Edit size={16} />
-                  </button>
+                  <IconActionButton
+                    label="Editar plano"
+                    tone="info"
+                    onClick={() => onEdit(plan)}
+                    icon={<Edit size={16} />}
+                  />
                   {plan.is_active === false ? (
-                    <button onClick={() => onReactivate(plan)} className="btn btn-ghost btn-xs text-success p-0">
-                      <RotateCcw size={16} />
-                    </button>
+                    <IconActionButton
+                      label="Reativar plano"
+                      tone="success"
+                      onClick={() => onReactivate(plan)}
+                      icon={<RotateCcw size={16} />}
+                    />
                   ) : (
-                    <button onClick={() => onDeactivate(plan.id)} className="btn btn-ghost btn-xs text-error p-0">
-                      <Trash2 size={16} />
-                    </button>
+                    <IconActionButton
+                      label="Desativar plano"
+                      tone="error"
+                      onClick={() => onDeactivate(plan.id)}
+                      icon={<Trash2 size={16} />}
+                    />
                   )}
                 </td>
               </tr>

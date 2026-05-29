@@ -74,7 +74,7 @@ export function MainLayout() {
       <div className="drawer-content flex flex-col">
         <header className="navbar bg-base-100 border-b border-base-300 sticky top-0 z-20 w-full px-4">
           <div className="flex-none md:hidden">
-            <label htmlFor="main-drawer" className="btn btn-square btn-ghost">
+            <label htmlFor="main-drawer" className="btn btn-square btn-ghost" aria-label="Abrir menu lateral" title="Abrir menu lateral">
               <Menu className="w-6 h-6 text-primary" />
             </label>
           </div>
@@ -88,6 +88,8 @@ export function MainLayout() {
             <button
               onClick={handleLogout}
               className="btn btn-ghost btn-sm text-error gap-2 font-bold uppercase"
+              aria-label="Sair da conta"
+              title="Sair da conta"
             >
               <span className="hidden sm:inline">Sair</span>
               <LogOut size={18} />

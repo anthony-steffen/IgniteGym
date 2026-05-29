@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import { useSuppliers } from "../../../hooks/useSuppliers";
-import { SupplierModal } from "../components/SupplierModal";
-import { Plus, Trash2, Building2, Pencil, Mail, Phone } from "lucide-react";
-import type { Supplier } from "../types";
+import { useState } from 'react';
+import { Plus, Trash2, Building2, Pencil, Mail, Phone } from 'lucide-react';
+import { useSuppliers } from '../../../hooks/useSuppliers';
+import { SupplierModal } from '../components/SupplierModal';
+import type { Supplier } from '../types';
+import { IconActionButton } from '../../../shared/components/IconActionButton';
 
 export function SupplierPage() {
   const { suppliers, isLoading, isError, hasValidSlug, deleteSupplier, createSupplier, updateSupplier } = useSuppliers();
@@ -24,7 +25,7 @@ export function SupplierPage() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Erro ao salvar marca:", error);
+      console.error('Erro ao salvar marca:', error);
     }
   };
 
@@ -44,14 +45,16 @@ export function SupplierPage() {
     );
   }
 
-  if (isLoading) return (
-    <div className="flex flex-col items-center justify-center p-20 gap-4">
-      <div className="loading loading-spinner loading-lg text-primary"></div>
-      <span className="uppercase font-black italic animate-pulse text-gray-400">
-        Sincronizando Marcas...
-      </span>
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 gap-4">
+        <div className="loading loading-spinner loading-lg text-primary"></div>
+        <span className="uppercase font-black italic animate-pulse text-base-content/60">
+          Sincronizando marcas...
+        </span>
+      </div>
+    );
+  }
 
   if (isError) {
     return (
@@ -70,11 +73,11 @@ export function SupplierPage() {
           <Building2 className="text-primary" size={35} />
           <h1 className="text-2xl font-black italic uppercase text-base-content leading-none">
             Marcas
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Fabricantes</p>
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest mt-1">Fabricantes</p>
           </h1>
         </div>
         <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px]">
-          <Plus size={12} strokeWidth={4} /> 
+          <Plus size={12} strokeWidth={4} />
           Fornecedor
         </button>
       </div>
@@ -84,28 +87,32 @@ export function SupplierPage() {
           <div key={supplier.id} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all group">
             <div className="card-body p-5">
               <div className="flex justify-between items-start">
-                <h2 className="card-title font-black italic uppercase text-sm">
-                  {supplier.name}
-                </h2>
+                <h2 className="card-title font-black italic uppercase text-sm">{supplier.name}</h2>
                 <div className="flex gap-1">
-                  <button onClick={() => handleOpenModal(supplier)} className="btn btn-square btn-ghost btn-xs text-info">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={() => handleDelete(supplier.id, supplier.name)} className="btn btn-square btn-ghost btn-xs text-error">
-                    <Trash2 size={14} />
-                  </button>
+                  <IconActionButton
+                    label="Editar fornecedor"
+                    tone="info"
+                    onClick={() => handleOpenModal(supplier)}
+                    icon={<Pencil size={14} />}
+                  />
+                  <IconActionButton
+                    label="Excluir fornecedor"
+                    tone="error"
+                    onClick={() => handleDelete(supplier.id, supplier.name)}
+                    icon={<Trash2 size={14} />}
+                  />
                 </div>
               </div>
-              
-              <p className="text-xs text-gray-500 font-medium line-clamp-2 min-h-[2.5rem] mt-1">
-                {supplier.description || "Sem descrição disponível."}
+
+              <p className="text-xs text-base-content/70 font-medium line-clamp-2 min-h-[2.5rem] mt-1">
+                {supplier.description || 'Sem descricao disponivel.'}
               </p>
 
               <div className="card-actions justify-start gap-4 border-t border-dashed pt-2 mt-2 border-base-300">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-base-content/60 uppercase">
                   <Mail size={12} className="text-primary" /> {supplier.email || '---'}
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-base-content/60 uppercase">
                   <Phone size={12} className="text-primary" /> {supplier.phone || '---'}
                 </div>
               </div>
@@ -114,11 +121,11 @@ export function SupplierPage() {
         ))}
       </div>
 
-      <SupplierModal 
-        key={selectedSupplier?.id ?? 'new'} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSave={handleSave} 
+      <SupplierModal
+        key={selectedSupplier?.id ?? 'new'}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
         selectedSupplier={selectedSupplier}
       />
     </div>

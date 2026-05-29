@@ -247,6 +247,8 @@ export function SalesPage() {
               <button
                 className="join-item btn btn-xs btn-outline"
                 onClick={() => setCurrentPage((p) => p - 1)}
+                aria-label="Pagina anterior"
+                title="Pagina anterior"
                 disabled={currentPage === 1}>
                 <ChevronLeft size={16} />
               </button>
@@ -256,6 +258,8 @@ export function SalesPage() {
               <button
                 className="join-item btn btn-xs btn-outline"
                 onClick={() => setCurrentPage((p) => p + 1)}
+                aria-label="Proxima pagina"
+                title="Proxima pagina"
                 disabled={currentPage === totalPages || totalPages === 0}>
                 <ChevronRight size={16} />
               </button>
@@ -344,7 +348,7 @@ function CartContent({
           <ShoppingCart size={20} className="text-primary" /> Itens Selecionados
         </h2>
         {isMobile && (
-          <button onClick={onClose} className="btn btn-ghost btn-circle btn-sm">
+          <button onClick={onClose} className="btn btn-ghost btn-circle btn-sm" aria-label="Fechar carrinho" title="Fechar carrinho">
             <X size={24} />
           </button>
         )}
@@ -392,7 +396,10 @@ function CartContent({
                 </span>
                 <button
                   onClick={() => setCart((c) => c.filter((i) => i.id !== item.id))}
-                  className="btn btn-ghost btn-xs text-error p-0 h-auto min-h-0">
+                  className="btn btn-ghost btn-xs text-error p-0 h-auto min-h-0"
+                  aria-label={`Remover ${item.name} do carrinho`}
+                  title="Remover item"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -401,7 +408,10 @@ function CartContent({
                 <div className="join border border-gray-200 rounded-lg bg-white">
                   <button
                     onClick={() => updateQty(item.id, -1)}
-                    className="join-item btn btn-xs btn-ghost px-2 text-primary">
+                    className="join-item btn btn-xs btn-ghost px-2 text-primary"
+                    aria-label={`Diminuir quantidade de ${item.name}`}
+                    title="Diminuir quantidade"
+                  >
                     <Minus size={12} strokeWidth={3} />
                   </button>
                   <span className="join-item px-4 flex items-center text-xs font-black italic border-x text-gray-800 border-gray-300">
@@ -409,7 +419,10 @@ function CartContent({
                   </span>
                   <button
                     onClick={() => updateQty(item.id, 1)}
-                    className="join-item btn btn-xs btn-ghost px-2 text-primary">
+                    className="join-item btn btn-xs btn-ghost px-2 text-primary"
+                    aria-label={`Aumentar quantidade de ${item.name}`}
+                    title="Aumentar quantidade"
+                  >
                     <Plus size={12} strokeWidth={3} />
                   </button>
                 </div>

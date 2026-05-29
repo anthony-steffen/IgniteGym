@@ -22,6 +22,8 @@ export default function ThemeToggle() {
       <button 
         onClick={toggleTheme} 
         className="btn btn-ghost btn-circle"
+        aria-label={theme === 'corporate' ? 'Ativar tema escuro' : 'Ativar tema claro'}
+        title={theme === 'corporate' ? 'Ativar tema escuro' : 'Ativar tema claro'}
       >
         {theme === 'corporate' ? (
           <Moon className="w-6 h-6" />
