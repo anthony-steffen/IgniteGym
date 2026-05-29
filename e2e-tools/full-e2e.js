@@ -55,17 +55,24 @@ async function dismissOpenModalIfAny(page) {
 }
 
 async function selectOptionByTextContains(selectLocator, expectedText) {
-  const options = await selectLocator.locator('option').all();
   const normalized = expectedText.toLowerCase();
+  const timeoutMs = 15000;
+  const startedAt = Date.now();
 
-  for (const option of options) {
-    const label = ((await option.innerText()) || '').trim();
-    const value = (await option.getAttribute('value')) || '';
-    if (!value) continue;
-    if (label.toLowerCase().includes(normalized)) {
-      await selectLocator.selectOption(value);
-      return;
+  while (Date.now() - startedAt < timeoutMs) {
+    const options = await selectLocator.locator('option').all();
+
+    for (const option of options) {
+      const label = ((await option.innerText()) || '').trim();
+      const value = (await option.getAttribute('value')) || '';
+      if (!value) continue;
+      if (label.toLowerCase().includes(normalized)) {
+        await selectLocator.selectOption(value);
+        return;
+      }
     }
+
+    await selectLocator.page().waitForTimeout(250);
   }
 
   throw new Error(`Nao foi possivel encontrar opcao contendo: ${expectedText}`);
@@ -166,8 +173,8 @@ async function run() {
       await page.getByRole('button', { name: /Novo Plano/i }).click();
       const modal = page.locator('.modal-box').first();
       await modal.getByPlaceholder(/Ex: Mensal VIP/i).fill(planName);
-      await modal.getByPlaceholder(/^30$/).fill('30');
-      await modal.getByPlaceholder(/0\.00/).fill('149.9');
+      await modal.locator('input[type="number"]').nth(0).fill('30');
+      await modal.locator('input[type="number"]').nth(1).fill('149.9');
       await modal.getByRole('button', { name: /Confirmar/i }).click();
       await page.getByRole('cell', { name: planName }).waitFor({ timeout: 15000 });
       await ensureNoBlockingAlert(page);
