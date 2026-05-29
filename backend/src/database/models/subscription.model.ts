@@ -22,8 +22,11 @@ export class Subscription extends Model<
   declare plan_id: string;
 
   declare status: 'ACTIVE' | 'CANCELED' | 'EXPIRED';
+  declare payment_status: 'PAID' | 'PENDING' | 'OVERDUE';
   declare start_date: Date;
   declare end_date: Date | null;
+  declare next_due_date: Date | null;
+  declare last_payment_at: Date | null;
   declare price: number;
 
   // 🔗 Associações tipadas
@@ -65,6 +68,12 @@ Subscription.init(
       defaultValue: 'ACTIVE',
     },
 
+    payment_status: {
+      type: DataTypes.ENUM('PAID', 'PENDING', 'OVERDUE'),
+      allowNull: false,
+      defaultValue: 'PAID',
+    },
+
     start_date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -72,6 +81,16 @@ Subscription.init(
 
     end_date: {
       type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+
+    next_due_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+
+    last_payment_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
 

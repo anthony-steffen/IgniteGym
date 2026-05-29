@@ -31,7 +31,8 @@ export class SubscriptionController {
       const subscriptions = await this.service.list(tenantId);
       return res.json(subscriptions);
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
   };
 
@@ -55,6 +56,20 @@ export class SubscriptionController {
 
       await this.service.cancel(id, tenantId);
       return res.status(204).send();
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  };
+
+  payment = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId as string;
+      const { paymentStatus } = req.body;
+
+      const subscription = await this.service.updatePaymentStatus(id, tenantId, paymentStatus);
+      return res.json(subscription);
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
       return res.status(statusCode).json({ status: "error", message: error.message });

@@ -5,7 +5,7 @@ import { BadgeCheck, CalendarClock, CircleDollarSign, Loader2, Plus, XCircle } f
 import { usePlans } from '../../../hooks/usePlans';
 import { useStudents } from '../../../hooks/useStudents';
 import { useSubscriptions } from '../../../hooks/useSubscriptions';
-import type { Subscription, SubscriptionStatus } from '../types';
+import type { PaymentStatus, Subscription, SubscriptionStatus } from '../types';
 import type { Student } from '../../student/types';
 
 interface ApiErrorResponse {
@@ -16,6 +16,12 @@ const statusClasses: Record<SubscriptionStatus, string> = {
   ACTIVE: 'badge-success',
   CANCELED: 'badge-warning',
   EXPIRED: 'badge-error',
+};
+
+const paymentStatusClasses: Record<PaymentStatus, string> = {
+  PAID: 'badge-success',
+  PENDING: 'badge-warning',
+  OVERDUE: 'badge-error',
 };
 
 function formatDate(date: string | null) {
@@ -37,19 +43,30 @@ function formatCurrency(value: number | string) {
 
 export function SubscriptionPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { subscriptions, isLoading, subscribe, isSubscribing, cancelSubscription, isCanceling } = useSubscriptions();
+  const {
+    subscriptions,
+    isLoading,
+    subscribe,
+    isSubscribing,
+    cancelSubscription,
+    isCanceling,
+    updatePaymentStatus,
+    isUpdatingPayment,
+  } = useSubscriptions();
   const { students } = useStudents(slug);
   const { plans, isLoading: isLoadingPlans } = usePlans();
   const [studentId, setStudentId] = useState('');
   const [planId, setPlanId] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('PAID');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const activeStudentIds = useMemo(
-    () => new Set(
-      subscriptions
-        .filter((subscription: Subscription) => subscription.status === 'ACTIVE')
-        .map((subscription: Subscription) => subscription.student_id)
-    ),
+    () =>
+      new Set(
+        subscriptions
+          .filter((subscription: Subscription) => subscription.status === 'ACTIVE')
+          .map((subscription: Subscription) => subscription.student_id)
+      ),
     [subscriptions]
   );
 
@@ -63,31 +80,48 @@ export function SubscriptionPage() {
     setMessage(null);
 
     try {
-      await subscribe({ studentId, planId });
+      await subscribe({ studentId, planId, paymentStatus });
       setStudentId('');
       setPlanId('');
-      setMessage({ type: 'success', text: 'Matrícula criada com sucesso.' });
+      setPaymentStatus('PAID');
+      setMessage({ type: 'success', text: 'Matricula criada com sucesso.' });
     } catch (error) {
       const apiError = error as AxiosError<ApiErrorResponse>;
       setMessage({
         type: 'error',
-        text: apiError.response?.data?.message || 'Erro ao criar matrícula.',
+        text: apiError.response?.data?.message || 'Erro ao criar matricula.',
       });
     }
   }
 
   async function handleCancel(subscription: Subscription) {
-    if (!confirm(`Cancelar matrícula de ${subscription.student?.user?.name || 'aluno'}?`)) return;
+    if (!confirm(`Cancelar matricula de ${subscription.student?.user?.name || 'aluno'}?`)) return;
     setMessage(null);
 
     try {
       await cancelSubscription(subscription.id);
-      setMessage({ type: 'success', text: 'Matrícula cancelada com sucesso.' });
+      setMessage({ type: 'success', text: 'Matricula cancelada com sucesso.' });
     } catch (error) {
       const apiError = error as AxiosError<ApiErrorResponse>;
       setMessage({
         type: 'error',
-        text: apiError.response?.data?.message || 'Erro ao cancelar matrícula.',
+        text: apiError.response?.data?.message || 'Erro ao cancelar matricula.',
+      });
+    }
+  }
+
+  async function handlePaymentStatusChange(subscription: Subscription, nextStatus: PaymentStatus) {
+    if (subscription.payment_status === nextStatus) return;
+    setMessage(null);
+
+    try {
+      await updatePaymentStatus({ id: subscription.id, paymentStatus: nextStatus });
+      setMessage({ type: 'success', text: 'Status de pagamento atualizado.' });
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      setMessage({
+        type: 'error',
+        text: apiError.response?.data?.message || 'Erro ao atualizar pagamento.',
       });
     }
   }
@@ -98,14 +132,17 @@ export function SubscriptionPage() {
         <div className="flex items-start gap-3">
           <BadgeCheck size={34} className="text-primary" />
           <h1 className="text-2xl font-black italic uppercase tracking-tighter">
-            Inscrições <span className="text-gray-400">| {slug}</span>
+            Inscricoes <span className="text-gray-400">| {slug}</span>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              Matrículas e planos ativos
+              Matriculas, planos ativos e pagamento
             </p>
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid w-full gap-2 rounded-lg border border-base-300 bg-base-100 p-3 shadow-sm lg:max-w-3xl lg:grid-cols-[1fr_1fr_auto]">
+        <form
+          onSubmit={handleSubmit}
+          className="grid w-full gap-2 rounded-lg border border-base-300 bg-base-100 p-3 shadow-sm lg:max-w-4xl lg:grid-cols-[1fr_1fr_180px_auto]"
+        >
           <select
             className="select select-bordered select-sm w-full font-bold text-xs"
             value={studentId}
@@ -135,6 +172,16 @@ export function SubscriptionPage() {
             ))}
           </select>
 
+          <select
+            className="select select-bordered select-sm w-full font-bold text-xs"
+            value={paymentStatus}
+            onChange={(event) => setPaymentStatus(event.target.value as PaymentStatus)}
+          >
+            <option value="PAID">Pagamento em dia</option>
+            <option value="PENDING">Pagamento pendente</option>
+            <option value="OVERDUE">Pagamento atrasado</option>
+          </select>
+
           <button
             type="submit"
             className="btn btn-primary btn-sm gap-2 font-black uppercase italic"
@@ -160,22 +207,23 @@ export function SubscriptionPage() {
                 <th>Aluno</th>
                 <th>Plano</th>
                 <th>Valor</th>
-                <th>Período</th>
+                <th>Periodo</th>
                 <th>Status</th>
-                <th className="text-right">Ações</th>
+                <th>Pagamento</th>
+                <th className="text-right">Acoes</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center">
+                  <td colSpan={7} className="py-10 text-center">
                     <Loader2 className="inline animate-spin text-primary" size={28} />
                   </td>
                 </tr>
               ) : subscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-xs font-bold uppercase text-gray-400">
-                    Nenhuma matrícula encontrada
+                  <td colSpan={7} className="py-10 text-center text-xs font-bold uppercase text-gray-400">
+                    Nenhuma matricula encontrada
                   </td>
                 </tr>
               ) : (
@@ -204,6 +252,25 @@ export function SubscriptionPage() {
                       <span className={`badge badge-sm font-black ${statusClasses[subscription.status]}`}>
                         {subscription.status}
                       </span>
+                    </td>
+                    <td>
+                      <div className="flex flex-col gap-1">
+                        <span className={`badge badge-sm font-black w-fit ${paymentStatusClasses[subscription.payment_status]}`}>
+                          {subscription.payment_status}
+                        </span>
+                        <select
+                          className="select select-bordered select-xs font-bold"
+                          value={subscription.payment_status}
+                          disabled={subscription.status !== 'ACTIVE' || isUpdatingPayment}
+                          onChange={(event) =>
+                            handlePaymentStatusChange(subscription, event.target.value as PaymentStatus)
+                          }
+                        >
+                          <option value="PAID">Pago</option>
+                          <option value="PENDING">Pendente</option>
+                          <option value="OVERDUE">Atrasado</option>
+                        </select>
+                      </div>
                     </td>
                     <td className="text-right">
                       <button

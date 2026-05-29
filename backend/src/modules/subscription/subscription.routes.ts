@@ -24,4 +24,7 @@ router.put('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.update
 // DELETE /subscriptions/academia-exemplo/:id -> Cancela matrícula
 router.delete('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.cancel);
 
+// PATCH /subscriptions/academia-exemplo/:id/payment -> Atualiza status de pagamento
+router.patch('/:slug/:id/payment', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.payment);
+
 export default router;

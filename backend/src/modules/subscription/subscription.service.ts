@@ -5,175 +5,189 @@ import { Student } from '../../database/models/student.model';
 import { Plan } from '../../database/models/plan.model';
 import { AppError } from '../../errors/AppError';
 
+type PaymentStatus = 'PAID' | 'PENDING' | 'OVERDUE';
+
+const VALID_PAYMENT_STATUS: PaymentStatus[] = ['PAID', 'PENDING', 'OVERDUE'];
+
+function normalizePaymentStatus(value?: string): PaymentStatus {
+  if (!value) return 'PAID';
+  if (!VALID_PAYMENT_STATUS.includes(value as PaymentStatus)) {
+    throw new AppError('Status de pagamento invalido.', 400);
+  }
+  return value as PaymentStatus;
+}
+
 export class SubscriptionService {
-  /**
-   * LISTAR MATRÍCULAS
-   * Pode listar todas da unidade ou filtrar por aluno
-   */
   async list(tenantId: string, studentId?: string) {
-    const where: any = { tenant_id: tenantId };
+    const where: Record<string, string> = { tenant_id: tenantId };
     if (studentId) where.student_id = studentId;
 
-    return await Subscription.findAll({
+    return Subscription.findAll({
       where,
       include: [
-        { association: 'student', include: ['user'] }, // Assume associação configurada
-        { association: 'plan' }
+        { association: 'student', include: ['user'] },
+        { association: 'plan' },
       ],
       order: [['created_at', 'DESC']],
     });
   }
 
-  /**
-   * CRIAR ASSINATURA (Matricular Aluno)
-   */
-  async create(data: any) {
-    const { tenantId, studentId, planId } = data;
+  async create(data: {
+    tenantId: string;
+    studentId: string;
+    planId: string;
+    paymentStatus?: string;
+  }) {
+    const { tenantId, studentId, planId, paymentStatus } = data;
 
-    // 1️⃣ Valida aluno dentro do tenant
     const student = await Student.findOne({
       where: { id: studentId, tenant_id: tenantId, is_active: true },
     });
 
     if (!student) {
-      throw new AppError('Aluno não encontrado, inativo ou pertence a outra unidade.', 404);
+      throw new AppError('Aluno nao encontrado, inativo ou de outra unidade.', 404);
     }
 
-    // 2️⃣ Valida plano dentro do tenant
     const plan = await Plan.findOne({
       where: { id: planId, tenant_id: tenantId, is_active: true },
     });
 
     if (!plan) {
-      throw new AppError('Plano selecionado não existe ou foi desativado.', 404);
+      throw new AppError('Plano selecionado nao existe ou esta inativo.', 404);
     }
 
-    // 3️⃣ Impede múltiplas assinaturas ativas
     const activeSubscription = await Subscription.findOne({
       where: { tenant_id: tenantId, student_id: studentId, status: 'ACTIVE' },
     });
 
     if (activeSubscription) {
-      throw new AppError('O aluno já possui uma assinatura ativa nesta unidade.', 409);
+      throw new AppError('O aluno ja possui uma matricula ativa nesta unidade.', 409);
     }
 
-    // 4️⃣ Calcula datas baseadas na duração do plano
+    const resolvedPaymentStatus = normalizePaymentStatus(paymentStatus);
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + plan.duration_days);
 
-    try {
-      return await Subscription.create({
-        tenant_id: tenantId,
-        student_id: studentId,
-        plan_id: planId,
-        price: plan.price,
-        start_date: startDate,
-        end_date: endDate,
-        status: 'ACTIVE',
-      });
-    } catch (error) {
-      throw new AppError('Erro ao processar a matrícula no banco de dados.', 500);
-    }
+    return Subscription.create({
+      tenant_id: tenantId,
+      student_id: studentId,
+      plan_id: planId,
+      price: plan.price,
+      start_date: startDate,
+      end_date: endDate,
+      next_due_date: endDate,
+      payment_status: resolvedPaymentStatus,
+      last_payment_at: resolvedPaymentStatus === 'PAID' ? new Date() : null,
+      status: 'ACTIVE',
+    });
   }
 
-  /**
-   * ATUALIZAR / TROCAR PLANO (Com Transação 🛡️)
-   * Renormalizado para o método 'update' do Controller
-   */
-  async update(id: string, tenantId: string, data: any) {
+  async update(id: string, tenantId: string, data: { newPlanId: string }) {
     const { newPlanId } = data;
 
-    return await sequelize.transaction(async (t) => {
-      // 1️⃣ Busca assinatura específica garantindo o tenant
+    return sequelize.transaction(async (t) => {
       const subscription = await Subscription.findOne({
         where: { id, tenant_id: tenantId, status: 'ACTIVE' },
         transaction: t,
-        lock: t.LOCK.UPDATE
+        lock: t.LOCK.UPDATE,
       });
 
       if (!subscription) {
-        throw new AppError('Assinatura ativa não encontrada para alteração.', 404);
+        throw new AppError('Matricula ativa nao encontrada para alteracao.', 404);
       }
 
-      // 2️⃣ Valida novo plano
       const newPlan = await Plan.findOne({
         where: { id: newPlanId, tenant_id: tenantId, is_active: true },
-        transaction: t
+        transaction: t,
       });
 
       if (!newPlan) {
-        throw new AppError('O novo plano selecionado não é válido.', 404);
+        throw new AppError('O novo plano selecionado nao e valido.', 404);
       }
 
-      // 3️⃣ Encerra assinatura atual
-      await subscription.update({
-        status: 'CANCELED',
-        end_date: new Date()
-      }, { transaction: t });
+      await subscription.update(
+        {
+          status: 'CANCELED',
+          end_date: new Date(),
+        },
+        { transaction: t }
+      );
 
-      // 4️⃣ Cria nova assinatura vinculada
       const startDate = new Date();
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + newPlan.duration_days);
 
-      return await Subscription.create({
-        tenant_id: tenantId,
-        student_id: subscription.student_id,
-        plan_id: newPlanId,
-        price: newPlan.price,
-        start_date: startDate,
-        end_date: endDate,
-        status: 'ACTIVE',
-      }, { transaction: t });
+      return Subscription.create(
+        {
+          tenant_id: tenantId,
+          student_id: subscription.student_id,
+          plan_id: newPlanId,
+          price: newPlan.price,
+          start_date: startDate,
+          end_date: endDate,
+          next_due_date: endDate,
+          payment_status: 'PAID',
+          last_payment_at: new Date(),
+          status: 'ACTIVE',
+        },
+        { transaction: t }
+      );
     });
   }
 
-  /**
-   * CANCELAR MATRÍCULA
-   */
   async cancel(id: string, tenantId: string) {
     const subscription = await Subscription.findOne({
       where: { id, tenant_id: tenantId },
     });
 
     if (!subscription) {
-      throw new AppError('Assinatura não encontrada nesta unidade.', 404);
+      throw new AppError('Matricula nao encontrada nesta unidade.', 404);
     }
 
     if (subscription.status !== 'ACTIVE') {
-      throw new AppError('Esta assinatura já não está mais ativa.', 400);
+      throw new AppError('Esta matricula nao esta mais ativa.', 400);
     }
 
-    try {
-      return await subscription.update({
-        status: 'CANCELED',
-        end_date: new Date()
-      });
-    } catch (error) {
-      throw new AppError('Erro ao cancelar a assinatura.', 500);
-    }
+    return subscription.update({
+      status: 'CANCELED',
+      end_date: new Date(),
+    });
   }
 
-  /**
-   * EXPIRE SUBSCRIPTIONS (Rotina Automática)
-   */
-  async expireSubscriptions() {
-    try {
-      const now = new Date();
-      const [expiredCount] = await Subscription.update(
-        { status: 'EXPIRED' },
-        {
-          where: {
-            status: 'ACTIVE',
-            end_date: { [Op.lt]: now },
-          },
-        }
-      );
-      return expiredCount;
-    } catch (error) {
-      console.error('❌ Erro no Job de Expiração:', error);
-      return 0;
+  async updatePaymentStatus(id: string, tenantId: string, paymentStatus: string) {
+    const subscription = await Subscription.findOne({
+      where: { id, tenant_id: tenantId },
+    });
+
+    if (!subscription) {
+      throw new AppError('Matricula nao encontrada nesta unidade.', 404);
     }
+
+    if (subscription.status !== 'ACTIVE') {
+      throw new AppError('Somente matriculas ativas podem ter pagamento atualizado.', 400);
+    }
+
+    const resolvedPaymentStatus = normalizePaymentStatus(paymentStatus);
+
+    return subscription.update({
+      payment_status: resolvedPaymentStatus,
+      last_payment_at: resolvedPaymentStatus === 'PAID' ? new Date() : subscription.last_payment_at,
+    });
+  }
+
+  async expireSubscriptions() {
+    const now = new Date();
+    const [expiredCount] = await Subscription.update(
+      { status: 'EXPIRED', payment_status: 'OVERDUE' },
+      {
+        where: {
+          status: 'ACTIVE',
+          end_date: { [Op.lt]: now },
+        },
+      }
+    );
+
+    return expiredCount;
   }
 }
