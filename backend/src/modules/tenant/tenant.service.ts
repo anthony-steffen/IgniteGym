@@ -1,9 +1,26 @@
 import { sequelize } from '../../database/sequelize';
 import { Tenant } from '../../database/models/tenant.model';
 import { User } from '../../database/models/user.model';
+import { Category } from '../../database/models/category.model';
+import { Employee } from '../../database/models/employee.model';
 import { CreateTenantDTO } from './dtos/TenantDTO';
 import { AppError } from '../../errors/AppError';
 import bcrypt from 'bcrypt';
+
+const DEFAULT_CATEGORY_NAMES = [
+  'Suplementos Alimentares',
+  'Equipamentos e Maquinas',
+  'Acessorios e Vestuario',
+];
+
+const DEFAULT_ADMIN_WORK_SCHEDULE = {
+  mon: '08:00-12:00,13:00-17:00',
+  tue: '08:00-12:00,13:00-17:00',
+  wed: '08:00-12:00,13:00-17:00',
+  thu: '08:00-12:00,13:00-17:00',
+  fri: '08:00-12:00,13:00-17:00',
+  sat: '08:00-12:00',
+};
 
 export class TenantService {
   static async create(data: CreateTenantDTO) {
@@ -33,6 +50,24 @@ export class TenantService {
           password_hash,
           role: 'MANAGER', 
         }, { transaction: t });
+
+        await Employee.create({
+          tenant_id: tenant.id,
+          user_id: user.id,
+          role_title: 'GERENTE',
+          salary: 0,
+          weekly_hours: 44,
+          work_schedule: DEFAULT_ADMIN_WORK_SCHEDULE,
+          is_active: true,
+        }, { transaction: t });
+
+        await Category.bulkCreate(
+          DEFAULT_CATEGORY_NAMES.map((name) => ({
+            tenant_id: tenant.id,
+            name,
+          })),
+          { transaction: t }
+        );
 
         return { tenant, admin: { id: user.id, name: user.name, email: user.email } };
       });
