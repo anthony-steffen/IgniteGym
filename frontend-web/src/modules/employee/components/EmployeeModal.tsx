@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import type { AxiosError } from "axios";
-import { X, Save, UserPlus, Search, DollarSign, Clock } from "lucide-react";
-import { toast } from "react-toastify";
-import { useEmployees } from "../../../hooks/useEmployees";
-import type { CreateEmployeePayload, Employee, WorkSchedule } from "../types";
+import { useState, useEffect } from 'react';
+import type { AxiosError } from 'axios';
+import { X, Save, UserPlus, Search, DollarSign, Clock } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useEmployees } from '../../../hooks/useEmployees';
+import type { CreateEmployeePayload, Employee, WorkSchedule } from '../types';
 
 interface ApiErrorResponse {
   message?: string;
@@ -21,23 +21,23 @@ interface EmployeeFormState {
 }
 
 const defaultWorkSchedule: WorkSchedule = {
-  mon: "08:00-12:00, 13:00-17:00",
-  tue: "08:00-12:00, 13:00-17:00",
-  wed: "08:00-12:00, 13:00-17:00",
-  thu: "08:00-12:00, 13:00-17:00",
-  fri: "08:00-12:00, 13:00-17:00",
-  sat: "08:00-12:00"
+  mon: '08:00-12:00, 13:00-17:00',
+  tue: '08:00-12:00, 13:00-17:00',
+  wed: '08:00-12:00, 13:00-17:00',
+  thu: '08:00-12:00, 13:00-17:00',
+  fri: '08:00-12:00, 13:00-17:00',
+  sat: '08:00-12:00',
 };
 
 const initialFormState: EmployeeFormState = {
-  userId: "",
-  name: "",
-  email: "",
-  password: "",
-  roleTitle: "INSTRUTOR",
+  userId: '',
+  name: '',
+  email: '',
+  password: '',
+  roleTitle: 'INSTRUTOR',
   salary: 0,
   weeklyHours: 44,
-  workSchedule: defaultWorkSchedule
+  workSchedule: defaultWorkSchedule,
 };
 
 interface EmployeeModalProps {
@@ -53,32 +53,32 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
     loadEligibleUsers: isOpen,
   });
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"create" | "promote">("create");
-
+  const [mode, setMode] = useState<'create' | 'promote'>('create');
   const [formData, setFormData] = useState<EmployeeFormState>(initialFormState);
 
   useEffect(() => {
-    if (isOpen) {
-      if (selectedEmployee) {
-        setFormData({
-          userId: selectedEmployee.user?.id || "",
-          name: selectedEmployee.user?.name || "",
-          email: selectedEmployee.user?.email || "",
-          password: "", 
-          roleTitle: selectedEmployee.roleTitle || "INSTRUTOR",
-          salary: Number(selectedEmployee.salary) || 0,
-          weeklyHours: selectedEmployee.weeklyHours || 44,
-          workSchedule: selectedEmployee.workSchedule || defaultWorkSchedule
-        });
-      } else {
-        setFormData(initialFormState);
-        setMode("create");
-      }
+    if (!isOpen) return;
+
+    if (selectedEmployee) {
+      setFormData({
+        userId: selectedEmployee.user?.id || '',
+        name: selectedEmployee.user?.name || '',
+        email: selectedEmployee.user?.email || '',
+        password: '',
+        roleTitle: selectedEmployee.roleTitle || 'INSTRUTOR',
+        salary: Number(selectedEmployee.salary) || 0,
+        weeklyHours: selectedEmployee.weeklyHours || 44,
+        workSchedule: selectedEmployee.workSchedule || defaultWorkSchedule,
+      });
+      return;
     }
+
+    setFormData(initialFormState);
+    setMode('create');
   }, [selectedEmployee, isOpen]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setLoading(true);
 
     try {
@@ -89,36 +89,37 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
             roleTitle: formData.roleTitle,
             salary: formData.salary,
             weeklyHours: formData.weeklyHours,
-            workSchedule: formData.workSchedule
-          }
+            workSchedule: formData.workSchedule,
+          },
         });
-        toast.success("Dados atualizados com sucesso!");
+        toast.success('Dados atualizados com sucesso!');
       } else {
-        const payload: CreateEmployeePayload = mode === "promote"
-          ? { 
-              userId: formData.userId,
-              roleTitle: formData.roleTitle,
-              salary: formData.salary,
-              weeklyHours: formData.weeklyHours,
-              workSchedule: formData.workSchedule
-            } 
-          : { 
-              name: formData.name,
-              email: formData.email,
-              password: formData.password,
-              roleTitle: formData.roleTitle,
-              salary: formData.salary,
-              weeklyHours: formData.weeklyHours,
-              workSchedule: formData.workSchedule
-            };
+        const payload: CreateEmployeePayload =
+          mode === 'promote'
+            ? {
+                userId: formData.userId,
+                roleTitle: formData.roleTitle,
+                salary: formData.salary,
+                weeklyHours: formData.weeklyHours,
+                workSchedule: formData.workSchedule,
+              }
+            : {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                roleTitle: formData.roleTitle,
+                salary: formData.salary,
+                weeklyHours: formData.weeklyHours,
+                workSchedule: formData.workSchedule,
+              };
 
         await createEmployee(payload);
-        toast.success("Funcionário contratado!");
+        toast.success('Funcionario contratado!');
       }
       onClose();
     } catch (error) {
       const apiError = error as AxiosError<ApiErrorResponse>;
-      toast.error(apiError.response?.data?.message || "Erro ao processar operação.");
+      toast.error(apiError.response?.data?.message || 'Erro ao processar operacao.');
     } finally {
       setLoading(false);
     }
@@ -129,12 +130,17 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-2xl bg-base-100 p-0 overflow-hidden border border-base-300 shadow-xl">
-        {/* Header */}
         <div className="bg-base-200 px-6 py-4 flex justify-between items-center border-b border-base-300">
           <h3 className="text-lg font-black italic uppercase text-primary">
-            {selectedEmployee ? "Editar Perfil Staff" : "Nova Contratação"}
+            {selectedEmployee ? 'Editar Perfil Staff' : 'Nova Contratacao'}
           </h3>
-          <button type="button" onClick={onClose} className="btn btn-ghost btn-sm btn-square">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-ghost btn-sm btn-square"
+            aria-label="Fechar modal de funcionario"
+            title="Fechar modal"
+          >
             <X size={20} />
           </button>
         </div>
@@ -142,17 +148,17 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           {!selectedEmployee && (
             <div className="flex gap-2 p-1 bg-base-300/50 rounded-lg">
-              <button 
-                type="button" 
-                onClick={() => setMode("create")} 
-                className={`flex-1 btn btn-sm no-animation ${mode === "create" ? "btn-primary shadow-sm" : "btn-ghost text-gray-500"}`}
+              <button
+                type="button"
+                onClick={() => setMode('create')}
+                className={`flex-1 btn btn-sm no-animation ${mode === 'create' ? 'btn-primary shadow-sm' : 'btn-ghost text-base-content/60'}`}
               >
                 <UserPlus size={14} className="mr-2" /> Novo Cadastro
               </button>
-              <button 
-                type="button" 
-                onClick={() => setMode("promote")} 
-                className={`flex-1 btn btn-sm no-animation ${mode === "promote" ? "btn-primary shadow-sm" : "btn-ghost text-gray-500"}`}
+              <button
+                type="button"
+                onClick={() => setMode('promote')}
+                className={`flex-1 btn btn-sm no-animation ${mode === 'promote' ? 'btn-primary shadow-sm' : 'btn-ghost text-base-content/60'}`}
               >
                 <Search size={14} className="mr-2" /> Promover Existente
               </button>
@@ -160,53 +166,53 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-base-200/30 p-4 rounded-xl border border-base-200">
-            {mode === "promote" && !selectedEmployee ? (
+            {mode === 'promote' && !selectedEmployee ? (
               <div className="form-control md:col-span-2">
-                <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Localizar Usuário</span></label>
-                <select 
-                  className="select select-bordered select-sm w-full font-bold" 
-                  value={formData.userId} 
-                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })} 
+                <label className="label"><span className="label-text font-black uppercase text-[10px] text-base-content/70">Localizar Usuario</span></label>
+                <select
+                  className="select select-bordered select-sm w-full font-bold"
+                  value={formData.userId}
+                  onChange={(event) => setFormData({ ...formData, userId: event.target.value })}
                   required
                 >
                   <option value="">Selecione um nome na lista...</option>
-                  {eligibleUsers?.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name.toUpperCase()} ({u.email})</option>
+                  {eligibleUsers?.map((user) => (
+                    <option key={user.id} value={user.id}>{user.name.toUpperCase()} ({user.email})</option>
                   ))}
                 </select>
               </div>
             ) : (
               <>
                 <div className="form-control">
-                  <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Nome</span></label>
-                  <input 
-                    className="input input-bordered input-sm font-bold" 
-                    value={formData.name} 
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  <label className="label"><span className="label-text font-black uppercase text-[10px] text-base-content/70">Nome</span></label>
+                  <input
+                    className="input input-bordered input-sm font-bold"
+                    value={formData.name}
+                    onChange={(event) => setFormData({ ...formData, name: event.target.value })}
                     disabled={!!selectedEmployee}
-                    required 
+                    required
                   />
                 </div>
                 <div className="form-control">
-                  <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">E-mail</span></label>
-                  <input 
-                    type="email" 
-                    className="input input-bordered input-sm font-bold" 
-                    value={formData.email} 
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                  <label className="label"><span className="label-text font-black uppercase text-[10px] text-base-content/70">E-mail</span></label>
+                  <input
+                    type="email"
+                    className="input input-bordered input-sm font-bold"
+                    value={formData.email}
+                    onChange={(event) => setFormData({ ...formData, email: event.target.value })}
                     disabled={!!selectedEmployee}
-                    required 
+                    required
                   />
                 </div>
-                {!selectedEmployee && mode === "create" && (
+                {!selectedEmployee && mode === 'create' && (
                   <div className="form-control md:col-span-2">
-                    <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Senha</span></label>
-                    <input 
-                      type="password" 
-                      className="input input-bordered input-sm font-bold" 
-                      value={formData.password} 
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
-                      required 
+                    <label className="label"><span className="label-text font-black uppercase text-[10px] text-base-content/70">Senha</span></label>
+                    <input
+                      type="password"
+                      className="input input-bordered input-sm font-bold"
+                      value={formData.password}
+                      onChange={(event) => setFormData({ ...formData, password: event.target.value })}
+                      required
                     />
                   </div>
                 )}
@@ -216,11 +222,11 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500">Cargo</span></label>
-              <select 
-                className="select select-bordered select-sm font-bold text-primary" 
-                value={formData.roleTitle} 
-                onChange={(e) => setFormData({ ...formData, roleTitle: e.target.value })}
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-base-content/70">Cargo</span></label>
+              <select
+                className="select select-bordered select-sm font-bold text-primary"
+                value={formData.roleTitle}
+                onChange={(event) => setFormData({ ...formData, roleTitle: event.target.value })}
               >
                 <option value="INSTRUTOR">INSTRUTOR</option>
                 <option value="GERENTE">GERENTE</option>
@@ -228,26 +234,26 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
               </select>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500 text-success">Salário</span></label>
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-success">Salario</span></label>
               <div className="relative">
                 <DollarSign size={14} className="absolute left-3 top-2.5 text-success" />
-                <input 
-                  type="number" 
-                  className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.salary || ""} 
-                  onChange={(e) => setFormData({ ...formData, salary: Number(e.target.value) })} 
+                <input
+                  type="number"
+                  className="input input-bordered input-sm font-bold w-full pl-8"
+                  value={formData.salary || ''}
+                  onChange={(event) => setFormData({ ...formData, salary: Number(event.target.value) })}
                 />
               </div>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text font-black uppercase text-[10px] text-gray-500 text-info">Horas</span></label>
+              <label className="label"><span className="label-text font-black uppercase text-[10px] text-info">Horas</span></label>
               <div className="relative">
                 <Clock size={14} className="absolute left-3 top-2.5 text-info" />
-                <input 
-                  type="number" 
-                  className="input input-bordered input-sm font-bold w-full pl-8" 
-                  value={formData.weeklyHours || ""} 
-                  onChange={(e) => setFormData({ ...formData, weeklyHours: Number(e.target.value) })} 
+                <input
+                  type="number"
+                  className="input input-bordered input-sm font-bold w-full pl-8"
+                  value={formData.weeklyHours || ''}
+                  onChange={(event) => setFormData({ ...formData, weeklyHours: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -255,13 +261,13 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
 
           <div className="modal-action bg-base-200 p-4 -mx-6 -mb-6 border-t border-base-300">
             <button type="button" onClick={onClose} className="btn btn-ghost btn-sm uppercase font-black italic">Descartar</button>
-            <button 
-              type="submit" 
-              className={`btn btn-primary btn-sm px-10 uppercase font-black italic gap-2 ${loading ? 'loading' : ''}`} 
+            <button
+              type="submit"
+              className={`btn btn-primary btn-sm px-10 uppercase font-black italic gap-2 ${loading ? 'loading' : ''}`}
               disabled={loading}
             >
               {!loading && <Save size={16} />}
-              {selectedEmployee ? "Salvar" : "Contratar"}
+              {selectedEmployee ? 'Salvar' : 'Contratar'}
             </button>
           </div>
         </form>

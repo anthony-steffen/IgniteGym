@@ -39,12 +39,12 @@ export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalPr
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box bg-white border border-gray-200 shadow-2xl max-w-lg">
+      <div className="modal-box bg-base-100 border border-base-300 shadow-2xl max-w-lg">
         <header className="mb-6">
           <h3 className="font-black italic uppercase text-2xl text-primary">
             {selectedPlan ? 'Editar Plano' : 'Novo Plano'}
           </h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+          <p className="text-[10px] text-base-content/60 font-bold uppercase tracking-widest">
             Sincronizado com tabela de precos
           </p>
         </header>
@@ -52,11 +52,11 @@ export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalPr
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-control">
             <label className="label py-1">
-              <span className="label-text font-black uppercase text-[10px] text-gray-500">Nome do Plano</span>
+              <span className="label-text font-black uppercase text-[10px] text-base-content/70">Nome do plano</span>
             </label>
             <input
               type="text"
-              className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold focus:border-primary"
+              className="input input-bordered w-full bg-base-100 text-base-content border-base-300 font-bold focus:border-primary"
               placeholder="Ex: Mensal VIP"
               value={formData.name}
               onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
@@ -67,12 +67,12 @@ export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalPr
           <div className="grid grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label py-1">
-                <span className="label-text font-black uppercase text-[10px] text-gray-500">Duracao (Dias)</span>
+                <span className="label-text font-black uppercase text-[10px] text-base-content/70">Duracao (dias)</span>
               </label>
               <input
                 type="number"
                 min={1}
-                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-bold"
+                className="input input-bordered w-full bg-base-100 text-base-content border-base-300 font-bold"
                 value={formData.duration_days}
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, duration_days: Number(event.target.value) }))
@@ -83,13 +83,13 @@ export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalPr
 
             <div className="form-control">
               <label className="label py-1">
-                <span className="label-text font-black uppercase text-[10px] text-gray-500">Valor (R$)</span>
+                <span className="label-text font-black uppercase text-[10px] text-base-content/70">Valor (R$)</span>
               </label>
               <input
                 type="number"
                 min={0}
                 step="0.01"
-                className="input input-bordered w-full bg-gray-50 text-gray-800 border-2 font-mono font-bold"
+                className="input input-bordered w-full bg-base-100 text-base-content border-base-300 font-mono font-bold"
                 value={formData.price}
                 onChange={(event) => setFormData((prev) => ({ ...prev, price: Number(event.target.value) }))}
                 required
@@ -98,17 +98,10 @@ export function PlanModal({ isOpen, onClose, onSave, selectedPlan }: PlanModalPr
           </div>
 
           <div className="flex justify-center mt-8 gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn bg-black text-white hover:bg-gray-800 border-none font-black uppercase italic text-xs px-8"
-            >
+            <button type="button" onClick={onClose} className="btn btn-ghost border border-base-300 font-black uppercase italic text-xs px-8">
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="btn btn-primary px-10 font-black uppercase italic shadow-lg shadow-primary/20"
-            >
+            <button type="submit" className="btn btn-primary px-10 font-black uppercase italic shadow-lg shadow-primary/20">
               Confirmar
             </button>
           </div>
