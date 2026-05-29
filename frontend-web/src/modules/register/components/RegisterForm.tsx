@@ -49,7 +49,7 @@ export function RegisterForm() {
           className="input input-bordered w-full font-bold lowercase text-xs"
         />
         <input 
-          {...register('admin_password_raw', { required: true })}
+          {...register('admin_password', { required: true })}
           type="password"
           placeholder="SENHA DE ACESSO"
           className="input input-bordered w-full font-bold text-xs"

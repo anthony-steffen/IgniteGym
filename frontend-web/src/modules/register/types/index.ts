@@ -2,7 +2,7 @@ export interface RegisterTenantData {
   // Dados da Unidade
   name: string;
   slug: string;
-  contact_email: string;
+  contact_email?: string;
   address?: string;
 
   // Dados do Admin

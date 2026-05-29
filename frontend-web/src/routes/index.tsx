@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Importação das Páginas
 import { LoginPage } from '../modules/auth/pages/LoginPage';
-import { RegisterPage } from '../modules/auth/pages/RegisterPage'; 
+import { RegisterPage } from '../modules/register/pages/RegisterPage';
 import { PlanPage } from '../modules/plan/pages/PlanPage';
 import { StudentPage } from '../modules/student/pages/StudentPage';
 import { ProductPage } from '../modules/product/pages/ProductPage';
