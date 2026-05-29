@@ -3,6 +3,19 @@ import { useCheckins } from '../../../hooks/useCheckins';
 import { History, Clock } from 'lucide-react';
 import type { Checkin } from '../types/index';
 
+function formatCheckinTime(checkin: Checkin) {
+  const rawDate = checkin.created_at || checkin.checked_in_at || checkin.createdAt;
+  if (!rawDate) return null;
+
+  const date = new Date(rawDate);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function CheckinPage() {
   const { checkins, isLoading } = useCheckins();
 
@@ -32,27 +45,28 @@ export function CheckinPage() {
               {isLoading ? (
                 <div className="p-10 text-center"><span className="loading loading-spinner text-primary"></span></div>
               ) : (
-                checkins.map((c: Checkin) => (
-                  <div key={c.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
-                    <div className="flex flex-col">
-                      <span className="font-black uppercase italic text-sm text-gray-800">
-                        {c.student?.user?.name || 'ALUNO'}
-                      </span>
-                      <div className="flex items-center gap-1 text-gray-400">
-                        <Clock size={12} />
-                        <span className="text-[10px] font-bold">
-                          {new Date(c.created_at).toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })} H
+                checkins.map((c: Checkin) => {
+                  const checkinTime = formatCheckinTime(c);
+
+                  return (
+                    <div key={c.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
+                      <div className="flex flex-col">
+                        <span className="font-black uppercase italic text-sm text-gray-800">
+                          {c.student?.user?.name || 'ALUNO'}
                         </span>
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Clock size={12} />
+                          <span className="text-[10px] font-bold">
+                            {checkinTime ? `${checkinTime} H` : 'Horario indisponivel'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-black italic text-success border border-success/20 px-2 py-1 rounded bg-success/5 uppercase">
+                        Autorizado
                       </div>
                     </div>
-                    <div className="text-[10px] font-black italic text-success border border-success/20 px-2 py-1 rounded bg-success/5 uppercase">
-                      Autorizado
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

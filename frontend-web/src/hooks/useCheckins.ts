@@ -18,7 +18,12 @@ export function useCheckins() {
     queryKey: ['checkins', tenantSlug],
     queryFn: async () => {
       const response = await api.get(`/checkins/${tenantSlug}`);
-      return response.data;
+      const checkins = response.data as Checkin[];
+
+      return checkins.map((checkin) => ({
+        ...checkin,
+        created_at: checkin.created_at || checkin.checked_in_at || checkin.createdAt,
+      }));
     },
     enabled: !!tenantSlug,
   });
