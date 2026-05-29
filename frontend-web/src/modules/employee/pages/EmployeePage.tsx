@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { 
@@ -27,10 +26,10 @@ export function EmployeePage() {
     setIsModalOpen(true);
   };
 
-  // Mantendo sua lógica de filtro original para evitar erros de lint (searchTerm)
-  const filteredEmployees = employees.filter((emp: any) =>
+  const normalizedSearch = searchTerm.toLowerCase();
+  const filteredEmployees = employees.filter((emp: Employee) =>
     emp.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.role_title?.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.roleTitle.toLowerCase().includes(normalizedSearch)
   );
 
   if (isLoading) {
@@ -80,7 +79,7 @@ export function EmployeePage() {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.map((emp: any) => (
+            {filteredEmployees.map((emp: Employee) => (
               <tr key={emp.id} className="hover">
                 <td>
                   <div className="flex items-center gap-3">
@@ -98,7 +97,7 @@ export function EmployeePage() {
                 <td>
                   <div className="flex items-center gap-1">
                     <ShieldCheck size={14} className="text-primary" />
-                    <span className="badge badge-ghost badge-sm font-bold">{emp.role_title}</span>
+                    <span className="badge badge-ghost badge-sm font-bold">{emp.roleTitle}</span>
                   </div>
                 </td>
                 <td>
@@ -110,7 +109,7 @@ export function EmployeePage() {
                 <td>
                   <div className="flex items-center gap-1 text-xs font-bold">
                     <Clock size={14} className="text-info" />
-                    {emp.weekly_hours}h/sem
+                    {emp.weeklyHours}h/sem
                   </div>
                 </td>
                 <td className="text-right">

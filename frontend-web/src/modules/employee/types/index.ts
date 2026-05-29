@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+export type WorkSchedule = Record<string, string>;
 
 export interface Employee {
-  is_active: any;
   id: string;
   roleTitle: string;
   salary: number;
   weeklyHours: number;
-  workSchedule: any;
+  workSchedule: WorkSchedule;
+  is_active?: boolean;
   user?: {
     id: string;
     name: string;
@@ -18,7 +18,7 @@ export interface CreateEmployeePayload {
   roleTitle: string;
   salary: number;
   weeklyHours: number;
-  workSchedule: any;
+  workSchedule: WorkSchedule;
   userId?: string;
   name?: string;
   email?: string;
@@ -29,4 +29,10 @@ export interface CreateEmployeePayload {
 export interface CreateEmployeeData {
   userId: string;
   roleTitle: string;
+}
+
+export interface EligibleUser {
+  id: string;
+  name: string;
+  email: string;
 }

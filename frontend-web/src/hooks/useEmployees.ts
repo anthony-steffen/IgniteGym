@@ -1,25 +1,30 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
+import type { CreateEmployeePayload, EligibleUser, Employee } from '../modules/employee/types';
+
+interface UpdateEmployeePayload {
+  id: string;
+  payload: Pick<CreateEmployeePayload, 'roleTitle' | 'salary' | 'weeklyHours' | 'workSchedule'>;
+}
 
 export function useEmployees(slug?: string) {
   const queryClient = useQueryClient();
 
   // 1. LISTAGEM
-  const employeesQuery = useQuery({
+  const employeesQuery = useQuery<Employee[]>({
     queryKey: ['employees', slug],
     queryFn: async () => {
-      const { data } = await api.get(`/employees/${slug}`);
+      const { data } = await api.get<Employee[]>(`/employees/${slug}`);
       return data;
     },
     enabled: !!slug,
   });
 
   // 2. USUÁRIOS ELEGÍVEIS
-  const eligibleUsersQuery = useQuery({
+  const eligibleUsersQuery = useQuery<EligibleUser[]>({
     queryKey: ['eligible-users', slug],
     queryFn: async () => {
-      const { data } = await api.get(`/employees/${slug}/eligible`);
+      const { data } = await api.get<EligibleUser[]>(`/employees/${slug}/eligible`);
       return data;
     },
     enabled: !!slug,
@@ -27,8 +32,8 @@ export function useEmployees(slug?: string) {
 
   // 3. CRIAÇÃO/ATUALIZAÇÃO
   const createEmployeeMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const { data } = await api.post(`/employees/${slug}`, payload);
+    mutationFn: async (payload: CreateEmployeePayload) => {
+      const { data } = await api.post<Employee>(`/employees/${slug}`, payload);
       return data;
     },
     onSuccess: () => {
@@ -37,8 +42,8 @@ export function useEmployees(slug?: string) {
   });
 
   const updateEmployeeMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-      const { data } = await api.put(`/employees/${slug}/${id}`, payload);
+    mutationFn: async ({ id, payload }: UpdateEmployeePayload) => {
+      const { data } = await api.put<Employee>(`/employees/${slug}/${id}`, payload);
       return data;
     },
     onSuccess: () => {

@@ -1,14 +1,50 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
+import type { AxiosError } from "axios";
 import { X, Save, UserPlus, Search, DollarSign, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 import { useEmployees } from "../../../hooks/useEmployees";
+import type { CreateEmployeePayload, Employee, WorkSchedule } from "../types";
+
+interface ApiErrorResponse {
+  message?: string;
+}
+
+interface EmployeeFormState {
+  userId: string;
+  name: string;
+  email: string;
+  password: string;
+  roleTitle: string;
+  salary: number;
+  weeklyHours: number;
+  workSchedule: WorkSchedule;
+}
+
+const defaultWorkSchedule: WorkSchedule = {
+  mon: "08:00-12:00, 13:00-17:00",
+  tue: "08:00-12:00, 13:00-17:00",
+  wed: "08:00-12:00, 13:00-17:00",
+  thu: "08:00-12:00, 13:00-17:00",
+  fri: "08:00-12:00, 13:00-17:00",
+  sat: "08:00-12:00"
+};
+
+const initialFormState: EmployeeFormState = {
+  userId: "",
+  name: "",
+  email: "",
+  password: "",
+  roleTitle: "INSTRUTOR",
+  salary: 0,
+  weeklyHours: 44,
+  workSchedule: defaultWorkSchedule
+};
 
 interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   slug: string;
-  selectedEmployee?: any;
+  selectedEmployee?: Employee | null;
 }
 
 export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: EmployeeModalProps) {
@@ -16,38 +52,20 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "promote">("create");
 
-  const initialFormState = {   
-    userId: "",
-    name: "",
-    email: "",
-    password: "",
-    roleTitle: "INSTRUTOR",
-    salary: 0,
-    weeklyHours: 44,
-    workSchedule: {
-      mon: "08:00-12:00, 13:00-17:00",
-      tue: "08:00-12:00, 13:00-17:00",
-      wed: "08:00-12:00, 13:00-17:00",
-      thu: "08:00-12:00, 13:00-17:00",
-      fri: "08:00-12:00, 13:00-17:00",
-      sat: "08:00-12:00"
-    }
-  };
-
-  const [formData, setFormData] = useState(initialFormState);
+  const [formData, setFormData] = useState<EmployeeFormState>(initialFormState);
 
   useEffect(() => {
     if (isOpen) {
       if (selectedEmployee) {
         setFormData({
-          userId: selectedEmployee.user_id || "",
+          userId: selectedEmployee.user?.id || "",
           name: selectedEmployee.user?.name || "",
           email: selectedEmployee.user?.email || "",
           password: "", 
-          roleTitle: selectedEmployee.role_title || "INSTRUTOR",
+          roleTitle: selectedEmployee.roleTitle || "INSTRUTOR",
           salary: Number(selectedEmployee.salary) || 0,
-          weeklyHours: selectedEmployee.weekly_hours || 44,
-          workSchedule: selectedEmployee.work_schedule || initialFormState.workSchedule
+          weeklyHours: selectedEmployee.weeklyHours || 44,
+          workSchedule: selectedEmployee.workSchedule || defaultWorkSchedule
         });
       } else {
         setFormData(initialFormState);
@@ -73,14 +91,13 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
         });
         toast.success("Dados atualizados com sucesso!");
       } else {
-        const payload = mode === "promote" 
+        const payload: CreateEmployeePayload = mode === "promote"
           ? { 
               userId: formData.userId,
               roleTitle: formData.roleTitle,
               salary: formData.salary,
               weeklyHours: formData.weeklyHours,
-              workSchedule: formData.workSchedule,
-              slug 
+              workSchedule: formData.workSchedule
             } 
           : { 
               name: formData.name,
@@ -89,16 +106,16 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
               roleTitle: formData.roleTitle,
               salary: formData.salary,
               weeklyHours: formData.weeklyHours,
-              workSchedule: formData.workSchedule,
-              slug 
+              workSchedule: formData.workSchedule
             };
 
-        await createEmployee(payload as any);
+        await createEmployee(payload);
         toast.success("Funcionário contratado!");
       }
       onClose();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Erro ao processar operação.");
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      toast.error(apiError.response?.data?.message || "Erro ao processar operação.");
     } finally {
       setLoading(false);
     }
@@ -150,7 +167,7 @@ export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: Emplo
                   required
                 >
                   <option value="">Selecione um nome na lista...</option>
-                  {eligibleUsers?.map((u: any) => (
+                  {eligibleUsers?.map((u) => (
                     <option key={u.id} value={u.id}>{u.name.toUpperCase()} ({u.email})</option>
                   ))}
                 </select>
