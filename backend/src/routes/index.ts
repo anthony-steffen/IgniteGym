@@ -10,6 +10,7 @@ import checkinRoutes from "../modules/checkin/checkin.routes";
 import inventoryRouter  from "../modules/inventory/inventory.routes";
 import salesRouter from "../modules/sale/sales.routes";
 import tenantRouter from "../modules/tenant/tenant.routes";
+import dashboardRouter from "../modules/dashboard/dashboard.routes";
 
 const routes = Router();
 
@@ -25,5 +26,6 @@ routes.use("/plans", plansRoutes);
 routes.use("/checkins", checkinRoutes);
 routes.use("/inventory", inventoryRouter);
 routes.use("/sales", salesRouter);
+routes.use("/dashboard", dashboardRouter);
 
 export default routes;
