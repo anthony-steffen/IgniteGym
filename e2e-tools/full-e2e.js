@@ -24,6 +24,16 @@ function log(message) {
   console.log(line);
 }
 
+function parsePtBrCurrency(text) {
+  const normalized = text
+    .replace(/\s/g, '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : 0;
+}
+
 async function screenshot(page, name) {
   const file = path.join(artifactsDir, `${name}.png`);
   await page.screenshot({ path: file, fullPage: true });
@@ -205,6 +215,32 @@ async function run() {
       await page.getByText(/Matricula criada com sucesso/i).waitFor({ timeout: 15000 });
       await page.getByRole('cell', { name: studentName }).waitFor({ timeout: 15000 });
       await screenshot(page, 'subscription-created');
+    });
+
+    await recordStep(page, 'validate-dashboard-revenue', async () => {
+      await clickMenu(page, /Geral/i);
+      await waitForRoute(page, `/${slug}/home`);
+
+      const revenueCard = page.locator('.stat').filter({ hasText: /RECEITA DO MES/i }).first();
+      await revenueCard.waitFor({ timeout: 15000 });
+
+      let revenueText = '';
+      let revenueValue = 0;
+      const startedAt = Date.now();
+      const timeoutMs = 8000;
+
+      while (Date.now() - startedAt < timeoutMs) {
+        revenueText = (await revenueCard.locator('.stat-value').innerText()).trim();
+        revenueValue = parsePtBrCurrency(revenueText);
+        if (revenueValue > 0) break;
+        await page.waitForTimeout(250);
+      }
+
+      if (revenueValue <= 0) {
+        throw new Error(`Receita do mes invalida apos matricula paga: ${revenueText}`);
+      }
+
+      await screenshot(page, 'dashboard-revenue-validated');
     });
 
     await recordStep(page, 'create-supplier', async () => {
