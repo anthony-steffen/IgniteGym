@@ -228,4 +228,7 @@ npm run preview
 
 ## Licenca
 
-Uso interno e portfolio tecnico.
+Este projeto esta licenciado sob a Apache License 2.0.
+
+- Arquivo de licenca: [LICENSE](LICENSE)
+- Copyright: Anthony Steffen
