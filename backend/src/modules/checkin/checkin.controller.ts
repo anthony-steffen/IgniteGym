@@ -28,7 +28,8 @@ export class CheckinController {
       const checkins = await this.service.list(tenantId);
       return res.json(checkins);
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
   };
 
@@ -40,7 +41,8 @@ export class CheckinController {
       const checkins = await this.service.listByStudent(studentId, tenantId);
       return res.json(checkins);
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
   };
 }

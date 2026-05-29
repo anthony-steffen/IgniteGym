@@ -1,7 +1,17 @@
 import { Request, Response } from 'express';
 import { InventoryService } from './inventory.service';
+import { AppError } from '../../errors/AppError';
 
 const inventoryService = new InventoryService();
+
+function getStatusCode(error: unknown) {
+  return error instanceof AppError ? error.statusCode : 500;
+}
+
+function getMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return 'Erro interno do servidor.';
+}
 
 export class InventoryController {
   listProducts = async (req: Request, res: Response) => {
@@ -9,8 +19,8 @@ export class InventoryController {
       const tenantId = req.tenantId as string;
       const products = await inventoryService.listProducts(tenantId);
       return res.json(products);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
@@ -19,11 +29,11 @@ export class InventoryController {
       const tenantId = req.tenantId as string;
       const product = await inventoryService.createProduct({
         ...req.body,
-        tenantId
+        tenantId,
       });
       return res.status(201).json(product);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
@@ -35,11 +45,11 @@ export class InventoryController {
       const product = await inventoryService.updateProduct({
         ...req.body,
         tenantId,
-        productId
+        productId,
       });
       return res.json(product);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
@@ -50,8 +60,8 @@ export class InventoryController {
 
       await inventoryService.removeProduct(tenantId, productId);
       return res.status(204).send();
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 }

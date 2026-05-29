@@ -1,30 +1,36 @@
 import { Request, Response } from 'express';
 import { CategoryService } from './category.service';
+import { AppError } from '../../errors/AppError';
 
 const categoryService = new CategoryService();
+
+function getStatusCode(error: unknown) {
+  return error instanceof AppError ? error.statusCode : 500;
+}
+
+function getMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return 'Erro interno do servidor.';
+}
 
 export class CategoryController {
   list = async (req: Request, res: Response) => {
     try {
-      // O middleware tenantTranslate já garantiu que req.tenantId existe e é válido
       const tenantId = req.tenantId as string;
-
       const categories = await categoryService.listCategories(tenantId);
       return res.json(categories);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
   create = async (req: Request, res: Response) => {
     try {
       const tenantId = req.tenantId as string;
-
-      // Não precisamos mais validar o tenantId aqui, o middleware já barrou se não existisse
       const category = await categoryService.createCategory(tenantId, req.body);
       return res.status(201).json(category);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
@@ -38,8 +44,8 @@ export class CategoryController {
         ...req.body,
       });
       return res.json(category);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 
@@ -50,8 +56,8 @@ export class CategoryController {
 
       await categoryService.removeCategory(tenantId, id);
       return res.status(204).send();
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getStatusCode(error)).json({ message: getMessage(error) });
     }
   };
 }
