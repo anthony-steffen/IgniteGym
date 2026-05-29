@@ -61,6 +61,25 @@ Para rodar o projeto localmente:
     ```bash
     docker-compose up -d
     ```
+
+    O MySQL do container e publicado no host em `127.0.0.1:3307` por padrao
+    para evitar conflito com bancos locais usando a porta `3306`. Para usar outra
+    porta no host, execute:
+    ```bash
+    MYSQL_HOST_PORT=3308 docker-compose up -d
+    ```
+
+    No Windows PowerShell:
+    ```powershell
+    $env:MYSQL_HOST_PORT=3308
+    docker-compose up -d
+    ```
+
+    A API dentro do Docker continua acessando o banco por `db:3306`; essa
+    configuracao afeta apenas o acesso do seu host ao MySQL. Se rodar o backend
+    fora do Docker usando o banco do container, configure o `.env` local com
+    `DB_HOST=127.0.0.1` e `DB_PORT=3307`.
+
 4.  **Database Setup:**
     ```bash
     npm run db:migrate
