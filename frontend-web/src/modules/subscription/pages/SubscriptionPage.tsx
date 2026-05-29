@@ -1,0 +1,227 @@
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import type { AxiosError } from 'axios';
+import { BadgeCheck, CalendarClock, CircleDollarSign, Loader2, Plus, XCircle } from 'lucide-react';
+import { usePlans } from '../../../hooks/usePlans';
+import { useStudents } from '../../../hooks/useStudents';
+import { useSubscriptions } from '../../../hooks/useSubscriptions';
+import type { Subscription, SubscriptionStatus } from '../types';
+import type { Student } from '../../student/types';
+
+interface ApiErrorResponse {
+  message?: string;
+}
+
+const statusClasses: Record<SubscriptionStatus, string> = {
+  ACTIVE: 'badge-success',
+  CANCELED: 'badge-warning',
+  EXPIRED: 'badge-error',
+};
+
+function formatDate(date: string | null) {
+  if (!date) return '-';
+
+  return new Date(date).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function formatCurrency(value: number | string) {
+  return Number(value).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}
+
+export function SubscriptionPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const { subscriptions, isLoading, subscribe, isSubscribing, cancelSubscription, isCanceling } = useSubscriptions();
+  const { students } = useStudents(slug);
+  const { plans, isLoading: isLoadingPlans } = usePlans();
+  const [studentId, setStudentId] = useState('');
+  const [planId, setPlanId] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const activeStudentIds = useMemo(
+    () => new Set(
+      subscriptions
+        .filter((subscription: Subscription) => subscription.status === 'ACTIVE')
+        .map((subscription: Subscription) => subscription.student_id)
+    ),
+    [subscriptions]
+  );
+
+  const availableStudents = useMemo(
+    () => students.filter((student: Student) => !activeStudentIds.has(student.id) || student.id === studentId),
+    [activeStudentIds, studentId, students]
+  );
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setMessage(null);
+
+    try {
+      await subscribe({ studentId, planId });
+      setStudentId('');
+      setPlanId('');
+      setMessage({ type: 'success', text: 'Matrícula criada com sucesso.' });
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      setMessage({
+        type: 'error',
+        text: apiError.response?.data?.message || 'Erro ao criar matrícula.',
+      });
+    }
+  }
+
+  async function handleCancel(subscription: Subscription) {
+    if (!confirm(`Cancelar matrícula de ${subscription.student?.user?.name || 'aluno'}?`)) return;
+    setMessage(null);
+
+    try {
+      await cancelSubscription(subscription.id);
+      setMessage({ type: 'success', text: 'Matrícula cancelada com sucesso.' });
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      setMessage({
+        type: 'error',
+        text: apiError.response?.data?.message || 'Erro ao cancelar matrícula.',
+      });
+    }
+  }
+
+  return (
+    <div className="w-full space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3">
+          <BadgeCheck size={34} className="text-primary" />
+          <h1 className="text-2xl font-black italic uppercase tracking-tighter">
+            Inscrições <span className="text-gray-400">| {slug}</span>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Matrículas e planos ativos
+            </p>
+          </h1>
+        </div>
+
+        <form onSubmit={handleSubmit} className="grid w-full gap-2 rounded-lg border border-base-300 bg-base-100 p-3 shadow-sm lg:max-w-3xl lg:grid-cols-[1fr_1fr_auto]">
+          <select
+            className="select select-bordered select-sm w-full font-bold text-xs"
+            value={studentId}
+            onChange={(event) => setStudentId(event.target.value)}
+            required
+          >
+            <option value="">Aluno</option>
+            {availableStudents.map((student: Student) => (
+              <option key={student.id} value={student.id}>
+                {student.user?.name} {student.user?.email ? `(${student.user.email})` : ''}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="select select-bordered select-sm w-full font-bold text-xs"
+            value={planId}
+            onChange={(event) => setPlanId(event.target.value)}
+            required
+            disabled={isLoadingPlans}
+          >
+            <option value="">Plano</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name} - {formatCurrency(plan.price)}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm gap-2 font-black uppercase italic"
+            disabled={isSubscribing || !studentId || !planId}
+          >
+            {isSubscribing ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+            Matricular
+          </button>
+        </form>
+      </div>
+
+      {message && (
+        <div className={`alert py-3 ${message.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+          <span className="text-sm font-bold">{message.text}</span>
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-lg border border-base-300 bg-base-100 shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="table table-zebra w-full">
+            <thead>
+              <tr className="bg-base-200/70 text-[10px] uppercase tracking-widest text-gray-500">
+                <th>Aluno</th>
+                <th>Plano</th>
+                <th>Valor</th>
+                <th>Período</th>
+                <th>Status</th>
+                <th className="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center">
+                    <Loader2 className="inline animate-spin text-primary" size={28} />
+                  </td>
+                </tr>
+              ) : subscriptions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-xs font-bold uppercase text-gray-400">
+                    Nenhuma matrícula encontrada
+                  </td>
+                </tr>
+              ) : (
+                subscriptions.map((subscription: Subscription) => (
+                  <tr key={subscription.id}>
+                    <td>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">{subscription.student?.user?.name || 'Aluno'}</span>
+                        <span className="text-[11px] text-gray-400">{subscription.student?.user?.email}</span>
+                      </div>
+                    </td>
+                    <td className="font-bold text-xs uppercase">{subscription.plan?.name || '-'}</td>
+                    <td>
+                      <div className="flex items-center gap-1 text-xs font-bold text-success">
+                        <CircleDollarSign size={14} />
+                        {formatCurrency(subscription.price)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-1 text-xs font-bold">
+                        <CalendarClock size={14} className="text-info" />
+                        {formatDate(subscription.start_date)} - {formatDate(subscription.end_date)}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge badge-sm font-black ${statusClasses[subscription.status]}`}>
+                        {subscription.status}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-error"
+                        disabled={subscription.status !== 'ACTIVE' || isCanceling}
+                        onClick={() => handleCancel(subscription)}
+                      >
+                        <XCircle size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

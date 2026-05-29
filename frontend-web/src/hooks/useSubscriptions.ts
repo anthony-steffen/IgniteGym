@@ -1,23 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
+import type { CreateSubscriptionPayload, Subscription } from '../modules/subscription/types';
 
 export function useSubscriptions() {
   const queryClient = useQueryClient();
   const { slug } = useParams();
 
-  const subscriptionsQuery = useQuery({
+  const subscriptionsQuery = useQuery<Subscription[]>({
     queryKey: ['subscriptions', slug],
     queryFn: async () => {
       // GET /subscriptions/:slug
-      const response = await api.get(`/subscriptions/${slug}`);
+      const response = await api.get<Subscription[]>(`/subscriptions/${slug}`);
       return response.data;
     },
     enabled: !!slug,
   });
 
   const createSubscription = useMutation({
-    mutationFn: async (data: { studentId: string; planId: string }) => {
+    mutationFn: async (data: CreateSubscriptionPayload) => {
       // POST /subscriptions/:slug
       // O backend espera studentId e planId conforme seu CreateSubscriptionDTO
       return api.post(`/subscriptions/${slug}`, data);
@@ -42,6 +43,7 @@ export function useSubscriptions() {
     isLoading: subscriptionsQuery.isLoading,
     subscribe: createSubscription.mutateAsync,
     isSubscribing: createSubscription.isPending,
-    cancelSubscription: cancelSubscription.mutateAsync
+    cancelSubscription: cancelSubscription.mutateAsync,
+    isCanceling: cancelSubscription.isPending,
   };
-} 
+}

@@ -10,6 +10,7 @@ import { SupplierPage } from '../modules/supplier/pages/SupplierPage';
 import { HomePage } from '../modules/home/pages/HomePage';
 import { SalesPage } from '../modules/product/pages/SalesPage';
 import { UnitSettingsPage } from '../modules/tenant/pages/UnitSettingsPage';
+import { SubscriptionPage } from '../modules/subscription/pages/SubscriptionPage';
 
 // Componentes de Estrutura e Proteção
 import { ProtectedRoute } from '../shared/ProtectedRoute';
@@ -37,6 +38,7 @@ export function AppRoutes() {
           <Route path="sales" element={<SalesPage />} />
           <Route path="suppliers" element={<SupplierPage />} />
           <Route path="employee" element={<EmployeePage />} />
+          <Route path="subscriptions" element={<SubscriptionPage />} />
           <Route path="settings" element={<UnitSettingsPage />} />
           <Route path="checkin" element={<CheckinPage />} />
         </Route>
