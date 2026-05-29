@@ -2,6 +2,9 @@ import { sequelize } from '../../database/sequelize';
 import { Student } from '../../database/models/student.model';
 import { User } from '../../database/models/user.model';
 import { Tenant } from '../../database/models/tenant.model';
+import { Subscription } from '../../database/models/subscription.model';
+import { CheckIn } from '../../database/models/checkin.model';
+import { Sale } from '../../database/models/sale.model';
 import { CreateStudentDTO } from './dtos/create-student.dto';
 import { AppError } from '../../errors/AppError';
 import bcrypt from 'bcrypt';
@@ -145,5 +148,60 @@ export class StudentService {
     );
 
     return student;
+  }
+
+  static async history(studentId: string, slug: string) {
+    const tenantId = await this.resolveTenantId(slug);
+
+    const student = await Student.findOne({
+      where: { id: studentId, tenant_id: tenantId },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'phone', 'is_active'],
+      }],
+    });
+
+    if (!student) throw new AppError('Aluno nao encontrado.', 404);
+
+    const [subscriptions, checkins, sales] = await Promise.all([
+      Subscription.findAll({
+        where: { tenant_id: tenantId, student_id: studentId },
+        include: [{ association: 'plan' }],
+        order: [['created_at', 'DESC']],
+      }),
+      CheckIn.findAll({
+        where: { tenant_id: tenantId, student_id: studentId },
+        order: [['created_at', 'DESC']],
+        limit: 50,
+      }),
+      Sale.findAll({
+        where: { tenant_id: tenantId, student_id: studentId },
+        include: [
+          {
+            association: 'items',
+            include: [{ association: 'product', attributes: ['id', 'name'] }],
+          },
+        ],
+        order: [['created_at', 'DESC']],
+        limit: 20,
+      }),
+    ]);
+
+    const totalSpent = sales.reduce((sum, sale) => sum + Number(sale.total_value || 0), 0);
+
+    return {
+      student,
+      summary: {
+        totalSubscriptions: subscriptions.length,
+        totalCheckins: checkins.length,
+        totalSales: sales.length,
+        totalSpent,
+        lastCheckinAt: (checkins[0]?.get('created_at') as Date | undefined) ?? null,
+      },
+      subscriptions,
+      checkins,
+      sales,
+    };
   }
 }

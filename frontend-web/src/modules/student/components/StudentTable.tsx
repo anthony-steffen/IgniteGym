@@ -1,13 +1,14 @@
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, History, Trash2 } from 'lucide-react';
 import type { Student } from '../types';
 
 interface StudentTableProps {
   students: Student[];
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
+  onHistory: (student: Student) => void;
 }
 
-export function StudentTable({ students, onEdit, onDelete }: StudentTableProps) {
+export function StudentTable({ students, onEdit, onDelete, onHistory }: StudentTableProps) {
   return (
     <div className="card bg-base-100 shadow-xl overflow-hidden font-sans">
       <div className="overflow-x-auto">
@@ -39,6 +40,12 @@ export function StudentTable({ students, onEdit, onDelete }: StudentTableProps) 
                   </div>
                 </td>
                 <td className="flex-row justify-center space-x-2 text-center">
+                  <button 
+                    onClick={() => onHistory(student)} 
+                    className="btn btn-ghost btn-xs text-primary p-0 h-auto min-h-0"
+                  >
+                    <History size={16} />
+                  </button>
                   <button 
                     onClick={() => onEdit(student)} 
                     className="btn btn-ghost btn-xs text-info p-0 h-auto min-h-0"

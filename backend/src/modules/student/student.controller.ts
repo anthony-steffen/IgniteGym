@@ -55,4 +55,15 @@ export class StudentController {
       return res.status(statusCode).json({ status: "error", message: error.message });
     }
   }
+
+  static async history(req: Request, res: Response) {
+    try {
+      const { slug, id } = req.params;
+      const history = await StudentService.history(id, slug);
+      return res.json(history);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  }
 }

@@ -17,6 +17,9 @@ router.get('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), StudentContr
 // POST /students/unidade-centro -> Cadastra novo aluno
 router.post('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), StudentController.create);
 
+// GET /students/unidade-centro/:id/history -> Historico consolidado do aluno
+router.get('/:slug/:id/history', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), StudentController.history);
+
 // PUT /students/unidade-centro/:id -> Atualiza dados
 router.put('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), StudentController.update);
 

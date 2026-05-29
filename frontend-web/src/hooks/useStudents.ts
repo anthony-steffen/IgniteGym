@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
+import type { Student, StudentFormData, StudentHistoryData } from '../modules/student/types';
 
 /**
  * Hook para gestão de alunos consumindo a API baseada em Slug
@@ -13,7 +14,7 @@ export function useStudents(slug?: string) {
   const studentsQuery = useQuery({
     queryKey: ['students', slug],
     queryFn: async () => {
-      const { data } = await api.get(`/students/${slug}`);
+      const { data } = await api.get<Student[]>(`/students/${slug}`);
       return data;
     },
     enabled: !!slug, // Só executa se o slug estiver presente
@@ -21,7 +22,7 @@ export function useStudents(slug?: string) {
 
   // 2. CRIAÇÃO (POST /students/:slug)
   const createStudentMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: StudentFormData) => {
       const { data } = await api.post(`/students/${slug}`, payload);
       return data;
     },
@@ -32,7 +33,7 @@ export function useStudents(slug?: string) {
 
   // 3. ATUALIZAÇÃO (PUT /students/:slug/:id)
   const updateStudentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: StudentFormData }) => {
       const { data: response } = await api.put(`/students/${slug}/${id}`, data);
       return response;
     },
@@ -53,6 +54,11 @@ export function useStudents(slug?: string) {
     },
   });
 
+  const getStudentHistory = async (id: string) => {
+    const { data } = await api.get<StudentHistoryData>(`/students/${slug}/${id}/history`);
+    return data;
+  };
+
   return {
     students: studentsQuery.data ?? [],
     isLoading: studentsQuery.isLoading,
@@ -60,5 +66,6 @@ export function useStudents(slug?: string) {
     createStudent: createStudentMutation.mutateAsync,
     updateStudent: updateStudentMutation.mutateAsync,
     deactivateStudent: deactivateStudentMutation.mutateAsync,
+    getStudentHistory,
   };
 }

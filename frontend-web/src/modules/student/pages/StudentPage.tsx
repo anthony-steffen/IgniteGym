@@ -6,7 +6,8 @@ import { useStudents } from "../../../hooks/useStudents";
 import { StudentStats } from "../components/StudentStats";
 import { StudentTable } from "../components/StudentTable";
 import { StudentModal } from "../components/StudentModal";
-import type { Student, StudentFormData, StudentStatsData } from "../types";
+import { StudentHistoryModal } from "../components/StudentHistoryModal";
+import type { Student, StudentFormData, StudentHistoryData, StudentStatsData } from "../types";
 
 export function StudentPage() {
 	// 1. Captura o slug da URL (ex: /app/academia-exemplo/students)
@@ -19,12 +20,16 @@ export function StudentPage() {
 		createStudent,
 		deactivateStudent,
 		updateStudent,
+    getStudentHistory,
 	} = useStudents(slug);
 
 
 
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyData, setHistoryData] = useState<StudentHistoryData | null>(null);
 
 	// Lógica de estatísticas mantida conforme original
 	const stats: StudentStatsData = {
@@ -33,6 +38,21 @@ export function StudentPage() {
 		newThisMonth: 0, 
 		pending: students.filter((s: Student) => !s.user?.is_active).length,
 	};
+
+  const handleOpenHistory = async (student: Student) => {
+    setIsHistoryOpen(true);
+    setIsHistoryLoading(true);
+    setHistoryData(null);
+
+    try {
+      const history = await getStudentHistory(student.id);
+      setHistoryData(history);
+    } catch (error) {
+      console.error("Erro ao carregar historico do aluno:", error);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
 
 	const handleSave = async (data: StudentFormData) => {
 		try {
@@ -91,6 +111,7 @@ export function StudentPage() {
 					setSelectedStudent(s);
 					setIsModalOpen(true);
 				}}
+        onHistory={handleOpenHistory}
 				onDelete={(id) => {
 					if (confirm("Deseja realmente desativar este aluno?")) {
 						deactivateStudent(id);
@@ -104,6 +125,13 @@ export function StudentPage() {
 				onSave={handleSave}
 				selectedStudent={selectedStudent}
 			/>
+
+      <StudentHistoryModal
+        isOpen={isHistoryOpen}
+        isLoading={isHistoryLoading}
+        history={historyData}
+        onClose={() => setIsHistoryOpen(false)}
+      />
 		</div>
 	);
 }
