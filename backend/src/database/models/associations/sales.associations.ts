@@ -2,6 +2,8 @@ import { Sale } from '../sale.model';
 import { SaleItem } from '../sale-item.model';
 import { Product } from '../product.model';
 import { Tenant } from '../tenant.model';
+import { Student } from '../student.model';
+import { Employee } from '../employee.model';
 import { AssociationConfig } from './types';
 
 export const salesAssociations: AssociationConfig[] = [
@@ -28,5 +30,17 @@ export const salesAssociations: AssociationConfig[] = [
     type: 'belongsTo',
     target: Tenant,
     options: { foreignKey: 'tenant_id', as: 'tenant' },
+  },
+  {
+    source: Sale,
+    type: 'belongsTo',
+    target: Student,
+    options: { foreignKey: 'student_id', as: 'student' },
+  },
+  {
+    source: Sale,
+    type: 'belongsTo',
+    target: Employee,
+    options: { foreignKey: 'employee_id', as: 'employee' },
   },
 ];

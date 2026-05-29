@@ -13,7 +13,7 @@ router.param('slug', tenantTranslate);
 router.use(authMiddleware);
 
 // Lista vendas da unidade: GET /sales/academia-exemplo
-router.get('/:slug', salesController.list);
+router.get('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), salesController.list);
 
 // Registra nova venda: POST /sales/academia-exemplo
 // Apenas quem trabalha na unidade pode vender

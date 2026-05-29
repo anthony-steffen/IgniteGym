@@ -1,6 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo } from "react";
-import { useInventory } from "../../../hooks/useInventory";
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import type { AxiosError } from 'axios';
+import { useParams } from 'react-router-dom';
+import { useInventory } from '../../../hooks/useInventory';
+import { useStudents } from '../../../hooks/useStudents';
+import { useSales, type SalePaymentMethod } from '../../../hooks/useSales';
 import {
   ShoppingCart,
   Plus,
@@ -12,7 +15,7 @@ import {
   ChevronRight,
   Minus,
   X,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface CartItem {
   id: string;
@@ -21,21 +24,36 @@ interface CartItem {
   quantity: number;
 }
 
+interface ApiErrorResponse {
+  message?: string;
+}
+
 export function SalesPage() {
+  const { slug } = useParams<{ slug: string }>();
   const { products, isLoading } = useInventory();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { students } = useStudents(slug);
+  const { createSale, isCreatingSale } = useSales();
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<SalePaymentMethod>('PIX');
+  const [studentId, setStudentId] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const ITEMS_PER_PAGE = 20;
 
-  // 1. Lógica de Filtro e Busca (Incluindo novas informações)
+  const stockByProduct = useMemo(
+    () => new Map(products.map((product) => [product.id, Number(product.stock_quantity)])),
+    [products]
+  );
+
   const filteredProducts = useMemo(() => {
+    const normalized = searchTerm.toLowerCase();
     return products.filter((p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.supplier?.name.toLowerCase().includes(searchTerm.toLowerCase())
+      p.name.toLowerCase().includes(normalized) ||
+      p.category?.name.toLowerCase().includes(normalized) ||
+      p.supplier?.name.toLowerCase().includes(normalized)
     );
   }, [products, searchTerm]);
 
@@ -45,17 +63,21 @@ export function SalesPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // 2. Lógica de Adicionar ao Carrinho
   const addToCart = (product: any) => {
     setCart((current) => {
+      const maxStock = Number(product.stock_quantity || 0);
+      if (maxStock <= 0) return current;
+
       const exists = current.find((item) => item.id === product.id);
       if (exists) {
+        if (exists.quantity >= maxStock) return current;
         return current.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
+
       return [
         ...current,
         {
@@ -68,15 +90,15 @@ export function SalesPage() {
     });
   };
 
-  // 3. Atualizar Quantidade (+ / -)
   const updateQuantity = (id: string, delta: number) => {
     setCart((current) =>
-      current.map((item) => {
-        if (item.id === id) {
-          const nextQty = item.quantity + delta;
-          return nextQty > 0 ? { ...item, quantity: nextQty } : item;
-        }
-        return item;
+      current.flatMap((item) => {
+        if (item.id !== id) return [item];
+        const maxStock = stockByProduct.get(id) ?? 0;
+        const nextQty = item.quantity + delta;
+        if (nextQty <= 0) return [];
+        if (nextQty > maxStock) return [item];
+        return [{ ...item, quantity: nextQty }];
       })
     );
   };
@@ -86,13 +108,39 @@ export function SalesPage() {
     [cart]
   );
 
-  if (isLoading)
+  const handleFinalizeSale = async () => {
+    if (cart.length === 0 || isCreatingSale) return;
+    setMessage(null);
+
+    try {
+      await createSale({
+        studentId: studentId || undefined,
+        paymentMethod,
+        items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
+      });
+
+      setCart([]);
+      setStudentId('');
+      setPaymentMethod('PIX');
+      setMessage({ type: 'success', text: 'Venda finalizada com sucesso.' });
+      setIsCartOpen(false);
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      setMessage({
+        type: 'error',
+        text: apiError.response?.data?.message || 'Erro ao finalizar venda.',
+      });
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-20 gap-4 uppercase font-black italic">
         <span className="loading loading-spinner loading-lg text-primary"></span>
         Sincronizando PDV...
       </div>
     );
+  }
 
   return (
     <div className="drawer drawer-end h-[calc(100vh-120px)] overflow-hidden mx-auto w-full">
@@ -104,16 +152,13 @@ export function SalesPage() {
         onChange={() => setIsCartOpen(!isCartOpen)}
       />
 
-      {/* Ajuste de Responsividade: Mudança de xl para 2xl no flex-row */}
       <div className="drawer-content flex flex-col 2xl:flex-row gap-6 p-2 md:p-6 h-full lg:w-[95%] 2xl:w-[90%] mx-auto">
-        {/* LADO ESQUERDO: CATÁLOGO */}
         <div className="flex-1 flex flex-col min-w-0">
           <header className="flex flex-col gap-4 mb-6">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-black italic uppercase flex items-center gap-2">
-                <Package size={28} className="text-primary" /> Catálogo
+                <Package size={28} className="text-primary" /> Catalogo
               </h1>
-              {/* Ajuste de Responsividade: Botão aparece até 2xl */}
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="btn btn-primary btn-sm 2xl:hidden font-black italic gap-2">
@@ -136,12 +181,18 @@ export function SalesPage() {
             </div>
           </header>
 
+          {message && (
+            <div className={`alert mb-4 ${message.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+              <span className="text-xs font-bold">{message.text}</span>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-6 gap-3 pb-24 w-full h-screen">
             {paginatedItems.map((product) => (
               <div
                 key={product.id}
                 className="card bg-white shadow-sm border border-white hover:border-primary transition-all rounded-xl overflow-hidden max-w-50 h-90 md:h-100">
-                <div className="aspect-square bg-gray-50 relative h-60 md:h-70">
+                <div className="aspect-square bg-gray-50 relative h-60 md:h-70 flex items-center justify-center">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
@@ -151,7 +202,6 @@ export function SalesPage() {
                   ) : (
                     <Package size={32} className="text-gray-200" />
                   )}
-                  {/* Badge de Categoria */}
                   {product.category && (
                     <div className="absolute bottom-1 center bg-primary text-white text-[8px] px-1 rounded font-bold uppercase items-center">
                       {product.category.name}
@@ -160,7 +210,6 @@ export function SalesPage() {
                 </div>
                 <div className="card-body p-2 flex flex-col items-center">
                   <div className="text-center w-full">
-                    {/* Marca / Fornecedor */}
                     <p className="text-[8px] text-gray-400 font-bold uppercase truncate">
                       {product.supplier?.name}
                     </p>
@@ -174,7 +223,6 @@ export function SalesPage() {
                       <div className="bg-black text-white px-2 py-0.5 rounded font-black italic text-[10px]">
                         R$ {Number(product.price).toFixed(2)}
                       </div>
-                      {/* Estoque */}
                       <span className="text-[8px] font-bold text-gray-400 uppercase">
                         {product.stock_quantity} UN
                       </span>
@@ -182,9 +230,9 @@ export function SalesPage() {
                     
                     <button
                       onClick={() => addToCart(product)}
+                      disabled={Number(product.stock_quantity) <= 0}
                       className="btn btn-primary btn-xs btn-block font-black italic uppercase">
-                      {/* <Plus size={12} strokeWidth={4} />  */}
-											Adicionar
+                      Adicionar
                     </button>
                   </div>
                 </div>
@@ -201,7 +249,7 @@ export function SalesPage() {
                 <ChevronLeft size={16} />
               </button>
               <button className="join-item btn btn-xs btn-outline no-animation font-black italic uppercase">
-                Pág {currentPage}
+                Pag {currentPage}
               </button>
               <button
                 className="join-item btn btn-xs btn-outline"
@@ -213,8 +261,7 @@ export function SalesPage() {
           </div>
         </div>
 
-        {/* Ajuste de Responsividade: Sidebar só aparece em telas muito largas (2xl) */}
-        <aside className="hidden 2xl:flex w-80 bg-white border-2 border-base-200 rounded-3xl flex-col overflow-hidden shadow-2xl">
+        <aside className="hidden 2xl:flex w-96 bg-white border-2 border-base-200 rounded-3xl flex-col overflow-hidden shadow-2xl">
           <CartContent
             cart={cart}
             setCart={setCart}
@@ -222,6 +269,13 @@ export function SalesPage() {
             updateQty={updateQuantity}
             onClose={() => {}}
             isMobile={false}
+            students={students}
+            studentId={studentId}
+            setStudentId={setStudentId}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            onFinalize={handleFinalizeSale}
+            isFinalizing={isCreatingSale}
           />
         </aside>
       </div>
@@ -236,12 +290,35 @@ export function SalesPage() {
             updateQty={updateQuantity}
             onClose={() => setIsCartOpen(false)}
             isMobile={true}
+            students={students}
+            studentId={studentId}
+            setStudentId={setStudentId}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            onFinalize={handleFinalizeSale}
+            isFinalizing={isCreatingSale}
           />
         </div>
       </div>
     </div>
   );
 }
+
+type CartContentProps = {
+  cart: CartItem[];
+  setCart: Dispatch<SetStateAction<CartItem[]>>;
+  total: number;
+  updateQty: (id: string, delta: number) => void;
+  onClose: () => void;
+  isMobile: boolean;
+  students: any[];
+  studentId: string;
+  setStudentId: (id: string) => void;
+  paymentMethod: SalePaymentMethod;
+  setPaymentMethod: (method: SalePaymentMethod) => void;
+  onFinalize: () => void;
+  isFinalizing: boolean;
+};
 
 function CartContent({
   cart,
@@ -250,7 +327,14 @@ function CartContent({
   updateQty,
   onClose,
   isMobile,
-}: any) {
+  students,
+  studentId,
+  setStudentId,
+  paymentMethod,
+  setPaymentMethod,
+  onFinalize,
+  isFinalizing,
+}: CartContentProps) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="p-6 bg-gray-50 flex justify-between items-center border-b-2">
@@ -264,13 +348,39 @@ function CartContent({
         )}
       </div>
 
+      <div className="p-4 space-y-3 border-b border-base-200">
+        <select
+          className="select select-bordered select-sm w-full font-bold text-xs"
+          value={studentId}
+          onChange={(event) => setStudentId(event.target.value)}
+        >
+          <option value="">Venda avulsa (sem aluno)</option>
+          {students.map((student: any) => (
+            <option key={student.id} value={student.id}>
+              {student.user?.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select select-bordered select-sm w-full font-bold text-xs"
+          value={paymentMethod}
+          onChange={(event) => setPaymentMethod(event.target.value as SalePaymentMethod)}
+        >
+          <option value="PIX">PIX</option>
+          <option value="CASH">Dinheiro</option>
+          <option value="CREDIT_CARD">Cartao de Credito</option>
+          <option value="DEBIT_CARD">Cartao de Debito</option>
+        </select>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-300 italic font-black uppercase text-xs opacity-50">
             Carrinho Vazio
           </div>
         ) : (
-          cart.map((item: any) => (
+          cart.map((item) => (
             <div
               key={item.id}
               className="flex flex-col gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 animate-in slide-in-from-right-4">
@@ -279,9 +389,7 @@ function CartContent({
                   {item.name}
                 </span>
                 <button
-                  onClick={() =>
-                    setCart((c: any) => c.filter((i: any) => i.id !== item.id))
-                  }
+                  onClick={() => setCart((c) => c.filter((i) => i.id !== item.id))}
                   className="btn btn-ghost btn-xs text-error p-0 h-auto min-h-0">
                   <Trash2 size={16} />
                 </button>
@@ -329,9 +437,15 @@ function CartContent({
           </div>
         </div>
         <button
-          disabled={cart.length === 0}
+          onClick={onFinalize}
+          disabled={cart.length === 0 || isFinalizing}
           className="btn btn-primary btn-block bg-base-200 h-16 font-black italic uppercase text-lg shadow-xl shadow-primary/10 gap-3 border-none">
-          <CheckCircle2 size={24} strokeWidth={3} /> Finalizar Venda
+          {isFinalizing ? (
+            <span className="loading loading-spinner loading-sm"></span>
+          ) : (
+            <CheckCircle2 size={24} strokeWidth={3} />
+          )}
+          Finalizar Venda
         </button>
       </div>
     </div>

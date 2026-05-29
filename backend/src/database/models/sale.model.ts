@@ -1,8 +1,10 @@
 import { Model, DataTypes, InferAttributes, InferCreationAttributes, CreationOptional, NonAttribute, Association } from 'sequelize';
 import { sequelize } from '../sequelize';
 import { SaleItem } from './sale-item.model';
+import { Student } from './student.model';
+import { Employee } from './employee.model';
 
-export class Sale extends Model<InferAttributes<Sale, { omit: 'items' }>, InferCreationAttributes<Sale, { omit: 'items' }>> {
+export class Sale extends Model<InferAttributes<Sale, { omit: 'items' | 'student' | 'employee' }>, InferCreationAttributes<Sale, { omit: 'items' | 'student' | 'employee' }>> {
   declare id: CreationOptional<string>;
   declare tenant_id: string;
   declare student_id: string | null;
@@ -11,7 +13,13 @@ export class Sale extends Model<InferAttributes<Sale, { omit: 'items' }>, InferC
   declare payment_method: 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX';
 
   declare items?: NonAttribute<SaleItem[]>;
-  declare static associations: { items: Association<Sale, SaleItem>; };
+  declare student?: NonAttribute<Student>;
+  declare employee?: NonAttribute<Employee>;
+  declare static associations: {
+    items: Association<Sale, SaleItem>;
+    student: Association<Sale, Student>;
+    employee: Association<Sale, Employee>;
+  };
 }
 
 Sale.init({

@@ -1,92 +1,134 @@
-// src/modules/sales/sales.service.ts
 import { sequelize } from '../../database/sequelize';
 import { Sale } from '../../database/models/sale.model';
 import { SaleItem } from '../../database/models/sale-item.model';
 import { Product } from '../../database/models/product.model';
 import { StockMovement } from '../../database/models/stock-moviments.model';
+import { Employee } from '../../database/models/employee.model';
 import { AppError } from '../../errors/AppError';
 
-export class SalesService {
-  async createSale(data: any) {
-    const { tenantId, studentId, employeeId, items, paymentMethod } = data;
+type PaymentMethod = 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX';
 
-    // Validação básica de entrada
+interface SaleItemInput {
+  productId: string;
+  quantity: number;
+}
+
+interface CreateSaleInput {
+  tenantId: string;
+  studentId?: string | null;
+  employeeUserId: string;
+  items: SaleItemInput[];
+  paymentMethod: PaymentMethod;
+}
+
+export class SalesService {
+  async createSale(data: CreateSaleInput) {
+    const { tenantId, studentId, employeeUserId, items, paymentMethod } = data;
+
     if (!items || items.length === 0) {
-      throw new AppError('Não é possível realizar uma venda sem itens.', 400);
+      throw new AppError('Nao e possivel realizar uma venda sem itens.', 400);
     }
 
-    try {
-      return await sequelize.transaction(async (t) => {
-        let totalSaleValue = 0;
+    const employee = await Employee.findOne({
+      where: { user_id: employeeUserId, tenant_id: tenantId, is_active: true },
+    });
 
-        // 1. Criar a Venda (Cabeçalho)
-        const sale = await Sale.create({
+    if (!employee) {
+      throw new AppError('Funcionario nao autorizado para registrar vendas.', 403);
+    }
+
+    return sequelize.transaction(async (t) => {
+      let totalSaleValue = 0;
+
+      const sale = await Sale.create(
+        {
           tenant_id: tenantId,
-          student_id: studentId,
-          employee_id: employeeId,
+          student_id: studentId ?? null,
+          employee_id: employee.id,
           payment_method: paymentMethod,
-          total_value: 0 
-        }, { transaction: t });
+          total_value: 0,
+        },
+        { transaction: t }
+      );
 
-        for (const item of items) {
-          const product = await Product.findOne({
-            where: { id: item.productId, tenant_id: tenantId },
-            lock: t.LOCK.UPDATE // 🛡️ Evita que outro vendedor venda o mesmo item simultaneamente
-          });
+      for (const item of items) {
+        if (!item.productId || item.quantity <= 0) {
+          throw new AppError('Item de venda invalido.', 400);
+        }
 
-          // Validação de existência e estoque
-          if (!product) {
-            throw new AppError(`Produto com ID ${item.productId} não encontrado.`, 404);
-          }
+        const product = await Product.findOne({
+          where: { id: item.productId, tenant_id: tenantId },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
 
-          if (product.stock_quantity < item.quantity) {
-            throw new AppError(
-              `Estoque insuficiente para o produto: ${product.name}. Disponível: ${product.stock_quantity}`, 
-              400
-            );
-          }
+        if (!product) {
+          throw new AppError(`Produto com ID ${item.productId} nao encontrado.`, 404);
+        }
 
-          const subtotal = product.price * item.quantity;
-          totalSaleValue += subtotal;
+        if (product.stock_quantity < item.quantity) {
+          throw new AppError(
+            `Estoque insuficiente para ${product.name}. Disponivel: ${product.stock_quantity}.`,
+            400
+          );
+        }
 
-          // 2. Criar Item da Venda
-          await SaleItem.create({
+        const unitPrice = Number(product.price);
+        const subtotal = unitPrice * item.quantity;
+        totalSaleValue += subtotal;
+
+        await SaleItem.create(
+          {
             sale_id: sale.id,
             product_id: product.id,
             quantity: item.quantity,
-            unit_price: product.price,
-            subtotal
-          }, { transaction: t });
+            unit_price: unitPrice,
+            subtotal,
+          },
+          { transaction: t }
+        );
 
-          // 3. Baixa no Estoque (Product)
-          product.stock_quantity -= item.quantity;
-          await product.save({ transaction: t });
+        product.stock_quantity -= item.quantity;
+        await product.save({ transaction: t });
 
-          // 4. Registrar Movimentação de Saída (StockMovement)
-          await StockMovement.create({
+        await StockMovement.create(
+          {
             tenant_id: tenantId,
             product_id: product.id,
-            quantity: -item.quantity, // Quantidade negativa indica saída
+            quantity: -item.quantity,
             type: 'SALE',
-            reason: `Venda #${sale.id.toString().substring(0, 8)}`
-          }, { transaction: t });
-        }
+            reason: `Venda #${sale.id.toString().substring(0, 8)}`,
+          },
+          { transaction: t }
+        );
+      }
 
-        // 5. Atualizar valor total final da venda
-        sale.total_value = totalSaleValue;
-        await sale.save({ transaction: t });
+      sale.total_value = totalSaleValue;
+      await sale.save({ transaction: t });
 
-        return sale;
-      });
-    } catch (error: any) {
-      // Se for um erro que nós lançamos (AppError), repassa para o middleware
-      if (error instanceof AppError) throw error;
+      return sale;
+    });
+  }
 
-      // Log para o desenvolvedor
-      console.error('❌ Erro crítico na transação de venda:', error);
-      
-      // Erro genérico para o frontend caso seja algo inesperado (ex: banco caiu)
-      throw new AppError('Falha ao processar a venda. Tente novamente.', 500);
-    }
+  async listSales(tenantId: string) {
+    return Sale.findAll({
+      where: { tenant_id: tenantId },
+      include: [
+        {
+          association: 'items',
+          include: [{ association: 'product', attributes: ['id', 'name'] }],
+        },
+        {
+          association: 'student',
+          include: [{ association: 'user', attributes: ['id', 'name'] }],
+        },
+        {
+          association: 'employee',
+          include: [{ association: 'user', attributes: ['id', 'name'] }],
+        },
+      ],
+      order: [['created_at', 'DESC']],
+      limit: 100,
+    });
   }
 }
