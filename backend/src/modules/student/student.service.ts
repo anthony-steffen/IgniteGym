@@ -164,7 +164,7 @@ export class StudentService {
 
     if (!student) throw new AppError('Aluno nao encontrado.', 404);
 
-    const [subscriptions, checkins, sales] = await Promise.all([
+    const [subscriptions, checkins, totalCheckins, sales, totalSales, totalSpentRaw] = await Promise.all([
       Subscription.findAll({
         where: { tenant_id: tenantId, student_id: studentId },
         include: [{ association: 'plan' }],
@@ -174,6 +174,9 @@ export class StudentService {
         where: { tenant_id: tenantId, student_id: studentId },
         order: [['created_at', 'DESC']],
         limit: 50,
+      }),
+      CheckIn.count({
+        where: { tenant_id: tenantId, student_id: studentId },
       }),
       Sale.findAll({
         where: { tenant_id: tenantId, student_id: studentId },
@@ -186,17 +189,21 @@ export class StudentService {
         order: [['created_at', 'DESC']],
         limit: 20,
       }),
+      Sale.count({
+        where: { tenant_id: tenantId, student_id: studentId },
+      }),
+      Sale.sum('total_value', {
+        where: { tenant_id: tenantId, student_id: studentId },
+      }),
     ]);
-
-    const totalSpent = sales.reduce((sum, sale) => sum + Number(sale.total_value || 0), 0);
 
     return {
       student,
       summary: {
         totalSubscriptions: subscriptions.length,
-        totalCheckins: checkins.length,
-        totalSales: sales.length,
-        totalSpent,
+        totalCheckins,
+        totalSales,
+        totalSpent: Number(totalSpentRaw || 0),
         lastCheckinAt: (checkins[0]?.get('created_at') as Date | undefined) ?? null,
       },
       subscriptions,
