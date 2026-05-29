@@ -1,100 +1,213 @@
-# 🚀 IgniteGym | Multi-Tenant Management System
+# IgniteGym
 
-**IgniteGym** é uma solução robusta e escalável de **Gerenciamento de Academia**, projetada sob a arquitetura **Multi-Tenant**. O sistema permite que múltiplas unidades de academia operem de forma isolada e segura em uma única infraestrutura, gerenciando desde o controle de acesso até a saúde financeira e o desempenho dos alunos.
+Plataforma SaaS para gestao de academias com arquitetura multi-tenant.
 
-Este projeto funciona como um ERP (Enterprise Resource Planning) estratégico, focado na eficiência operacional e na escalabilidade do negócio fitness.
+## Producao
 
----
+- Web app (Railway): [https://ignitegym-front-end-production.up.railway.app/](https://ignitegym-front-end-production.up.railway.app/)
 
-## 🛠️ Tecnologias Utilizadas
+## Objetivo do produto
 
-O ecossistema técnico foi selecionado para garantir performance e tipagem estrita:
+IgniteGym foi construida para operar o fluxo principal de uma academia:
 
-* **Backend:** Node.js 18.x com TypeScript.
-* **Interface:** React (Web/Mobile).
-* **Banco de Dados:** MySQL com Sequelize ORM.
-* **Infraestrutura:** Docker e Redis.
-* **Segurança:** Autenticação JWT com Refresh Tokens e RBAC (Role-Based Access Control).
+- autenticacao e isolamento por unidade (tenant)
+- alunos e planos
+- matriculas e status de pagamento
+- check-in
+- fornecedores, produtos e estoque
+- vendas (PDV)
+- dashboard operacional com metricas da unidade
 
----
+## Arquitetura
 
-## 🏗️ Arquitetura do Sistema
+```text
+IgniteGym/
+|- backend/         API Node.js + TypeScript + Sequelize + MySQL
+|- frontend-web/    SPA React + Vite + React Query + DaisyUI
+|- e2e-tools/       Suite E2E (Playwright)
+|- frontend-mobile/ Base mobile (em evolucao)
+|- docker-compose.yml
+```
 
-### Isolamento de Dados (Multi-Tenancy)
-O sistema utiliza a entidade `GymUnit` como núcleo de isolamento. Cada requisição é filtrada por um **Middleware de Tenant Isolation**, garantindo a segurança e privacidade dos dados de cada unidade.
+### Multi-tenancy
 
-### Principais Módulos
-O banco de dados conta com **18 entidades mapeadas**, organizadas da seguinte forma:
+- cada requisicao de dominio usa `/:slug/...`
+- o `tenantTranslate` resolve o slug para `tenantId`
+- consultas sao filtradas por `tenant_id`
+- roles e permissoes sao aplicadas por middleware
 
-1.  **Core:** Unidades, Usuários (Admin, Manager, Instructor, Receptionist) e Alunos.
-2.  **Financeiro:** Gestão de planos, matrículas e controle de fluxo de caixa (receitas/despesas).
-3.  **Treinos:** Biblioteca de exercícios e montagem de treinos personalizados.
-4.  **Saúde:** Avaliações físicas detalhadas com cálculo automático de IMC.
-5.  **Operacional:** Controle de acesso (Check-in), gestão de estoque (SKU) e manutenção de equipamentos.
+## Stack tecnico
 
----
+### Backend
 
-## 📈 Roadmap de Desenvolvimento
+- Node.js
+- TypeScript
+- Express
+- Sequelize ORM
+- MySQL 8
+- JWT (auth)
 
-| Fase | Descrição | Status |
-| :--- | :--- | :--- |
-| **1. Infraestrutura** | Setup de Node.js, TS, Docker e Sequelize. | ⏳ PENDENTE |
-| **2. Core & Multi-Tenancy** | Implementação do isolamento por unidade e gestão de planos. | ⏳ PENDENTE |
-| **3. Auth & Students** | Sistema de login JWT, RBAC e gestão de alunos. | ⏳ PENDENTE |
-| **4. Financial** | Lógica de faturamento e dashboard financeiro. | ⏳ PENDENTE |
-| **5. Access & Workout** | Controle de check-in e biblioteca de treinos. | ⏳ PENDENTE |
-| **6. Inventory & Eval** | Avaliação física e controle de estoque/vendas. | ⏳ PENDENTE |
+### Frontend
 
----
+- React 19
+- Vite
+- TypeScript
+- TanStack React Query
+- DaisyUI + Tailwind CSS
+- Axios
 
-## 🔧 Instalação e Execução
+### Qualidade
 
-Para rodar o projeto localmente:
+- E2E com Playwright (fluxo completo de negocio)
+- Typecheck com `tsc --noEmit`
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/seu-usuario/ignite-gym.git
-    ```
-2.  **Configure o Ambiente:**
-    * Copie o arquivo `.env.example` para `.env` e preencha as variáveis.
-3.  **Suba os Containers:**
-    ```bash
-    docker-compose up -d
-    ```
+## Requisitos locais
 
-    O MySQL do container e publicado no host em `127.0.0.1:3307` por padrao
-    para evitar conflito com bancos locais usando a porta `3306`. Para usar outra
-    porta no host, execute:
-    ```bash
-    MYSQL_HOST_PORT=3308 docker-compose up -d
-    ```
+- Node.js 20+ (recomendado)
+- npm
+- Docker Desktop (para stack dockerizada)
 
-    No Windows PowerShell:
-    ```powershell
-    $env:MYSQL_HOST_PORT=3308
-    docker-compose up -d
-    ```
+## Execucao local (Docker)
 
-    A API dentro do Docker continua acessando o banco por `db:3306`; essa
-    configuracao afeta apenas o acesso do seu host ao MySQL. Se rodar o backend
-    fora do Docker usando o banco do container, configure o `.env` local com
-    `DB_HOST=127.0.0.1` e `DB_PORT=3307`.
+1. Subir containers:
 
-4.  **Database Setup:**
-    ```bash
-    npm run db:migrate
-    npm run db:seed
-    ```
-5.  **Inicie o Servidor:**
-    ```bash
-    npm run dev
-    ```
+```bash
+docker-compose up -d
+```
 
----
+2. Frontend web:
 
-## ✅ Checklist de Validação
+```bash
+cd frontend-web
+npm install
+npm run dev
+```
 
-- [x] Suporte a multi-tenancy (GymUnit).
-- [x] 18 entidades mapeadas com relacionamentos definidos.
-- [x] Sistema de permissões por cargo (RBAC).
-- [x] Histórico de avaliações e progresso do aluno.
+3. A API sobe no container `ignitegym_api` (porta `3001`).
+
+### Porta do MySQL no host
+
+No `docker-compose`, o banco e publicado em `127.0.0.1:3307` por padrao para evitar conflito com `3306` local.
+
+Para trocar:
+
+```bash
+MYSQL_HOST_PORT=3308 docker-compose up -d
+```
+
+PowerShell:
+
+```powershell
+$env:MYSQL_HOST_PORT=3308
+docker-compose up -d
+```
+
+## Execucao local (sem Docker para API)
+
+Se quiser rodar a API localmente usando o banco do container:
+
+1. Ajuste `backend/.env`:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3307
+```
+
+2. Execute:
+
+```bash
+cd backend
+npm install
+npm run db:migrate
+npm run dev
+```
+
+## Testes E2E
+
+Suite ponta a ponta em `e2e-tools/` cobrindo:
+
+- registro de unidade
+- login
+- planos
+- alunos
+- matriculas
+- check-in
+- fornecedores
+- produtos
+- vendas
+- logout
+- validacao de receita no dashboard
+
+Execucao:
+
+```bash
+cd e2e-tools
+npm install
+npm run e2e
+```
+
+Relatorios e screenshots:
+
+```text
+e2e-tools/artifacts/e2e-<timestamp>/
+```
+
+## Scripts principais
+
+### Backend
+
+```bash
+npm run dev
+npm run db:migrate
+npm run db:seed
+npm run build
+```
+
+### Frontend web
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```
+
+## Observacoes de deploy
+
+- Frontend em Railway (URL acima)
+- Backend preparado para ambiente docker e variaveis de ambiente
+- CORS configurado para ambiente local e producao
+
+## Escopo atual (MVP operacional)
+
+### Core obrigatorio
+
+- tenant/unidade
+- login e permissoes
+- alunos
+- planos
+- matriculas
+- check-in
+
+### Core comercial
+
+- status de pagamento da matricula
+- dashboard por unidade
+- historico do aluno
+
+### Modulos secundarios
+
+- fornecedores
+- produtos/estoque
+- vendas/PDV
+- funcionarios
+
+## Contribuicao
+
+1. Crie uma branch
+2. Commit por bloco funcional
+3. Abra PR com descricao objetiva
+4. Inclua evidencias de teste (typecheck e E2E quando aplicavel)
+
+## Licenca
+
+Uso interno e portfolio tecnico.
