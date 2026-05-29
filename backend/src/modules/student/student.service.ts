@@ -65,11 +65,11 @@ export class StudentService {
     });
   }
 
-  static async update(userId: string, slug: string, data: Partial<CreateStudentDTO>) {
+  static async update(studentId: string, slug: string, data: Partial<CreateStudentDTO>) {
     const tenantId = await this.resolveTenantId(slug);
 
     const student = await Student.findOne({
-      where: { user_id: userId, tenant_id: tenantId },
+      where: { id: studentId, tenant_id: tenantId },
       include: [{ model: User, as: 'user' }]
     });
 
