@@ -56,7 +56,8 @@ export class SubscriptionController {
       await this.service.cancel(id, tenantId);
       return res.status(204).send();
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
   };
 }

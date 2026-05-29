@@ -1,5 +1,16 @@
 import { Request, Response } from 'express';
 import { PlanService } from './plan.service';
+import { AppError } from '../../errors/AppError';
+
+function getErrorStatus(error: unknown) {
+  return error instanceof AppError ? error.statusCode : 500;
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error || error instanceof AppError
+    ? error.message
+    : 'Erro interno do servidor';
+}
 
 export class PlanController {
   private service: PlanService;
@@ -13,8 +24,8 @@ export class PlanController {
       const tenantId = req.tenantId as string;
       const plans = await this.service.list({ tenantId });
       return res.json(plans);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getErrorStatus(error)).json({ message: getErrorMessage(error) });
     }
   };
 
@@ -27,8 +38,8 @@ export class PlanController {
       });
 
       return res.status(201).json(plan);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getErrorStatus(error)).json({ message: getErrorMessage(error) });
     }
   };
 
@@ -44,8 +55,8 @@ export class PlanController {
       });
 
       return res.json(plan);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getErrorStatus(error)).json({ message: getErrorMessage(error) });
     }
   };
 
@@ -60,8 +71,8 @@ export class PlanController {
       });
 
       return res.status(204).send();
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+    } catch (error) {
+      return res.status(getErrorStatus(error)).json({ message: getErrorMessage(error) });
     }
   };
 }
