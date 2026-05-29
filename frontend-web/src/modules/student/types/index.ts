@@ -8,7 +8,6 @@ export interface StudentUser {
 }
 
 export interface Student {
-  name: any;
   birth_date: string;
   id: string;
   user_id: string;

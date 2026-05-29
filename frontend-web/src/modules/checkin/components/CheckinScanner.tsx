@@ -1,20 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import { useCheckins } from '../../../hooks/useCheckins';
 import { useStudents } from '../../../hooks/useStudents';
 import { UserCheck, Search, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import type { CreateCheckinData } from '../types/index';
 import type { Student } from '../../student/types'; // 👈 Importando o tipo do Aluno
 
+interface ApiErrorResponse {
+  message?: string;
+}
+
 export function CheckinScanner() {
+  const { slug } = useParams<{ slug: string }>();
   const { registerCheckin, isRegistering } = useCheckins();
-  const { students } = useStudents();
+  const { students } = useStudents(slug);
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // 👈 Tipagem explícita no parâmetro 's' para evitar ts(7006)
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
   const filteredStudents = searchTerm.length > 2 
-    ? students.filter((s: Student) => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? students.filter((student: Student) =>
+        student.user?.name?.toLowerCase().includes(normalizedSearch)
+      )
     : [];
 
   const handleCheckin = async (studentId: string, studentName: string) => {
@@ -27,8 +36,9 @@ export function CheckinScanner() {
       
       setMessage({ type: 'success', text: `ACESSO LIBERADO: ${studentName.toUpperCase()}` });
       setSearchTerm(''); 
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'ERRO NO CHECK-IN';
+    } catch (error) {
+      const apiError = error as AxiosError<ApiErrorResponse>;
+      const errorMsg = apiError.response?.data?.message || 'ERRO NO CHECK-IN';
       setMessage({ type: 'error', text: errorMsg.toUpperCase() });
     }
   };
@@ -70,10 +80,10 @@ export function CheckinScanner() {
                   <button
                     type="button"
                     disabled={isRegistering}
-                    onClick={() => handleCheckin(student.id, student.name)}
+                    onClick={() => handleCheckin(student.id, student.user.name)}
                     className="w-full text-left px-4 py-3 hover:bg-primary hover:text-white flex justify-between items-center transition-colors group disabled:opacity-50"
                   >
-                    <span className="font-bold uppercase italic text-xs">{student.name}</span>
+                    <span className="font-bold uppercase italic text-xs">{student.user.name}</span>
                     <span className="text-[9px] font-black opacity-50 group-hover:opacity-100 italic">
                       {isRegistering ? 'AGUARDE...' : 'CONFIRMAR ENTRADA'}
                     </span>
