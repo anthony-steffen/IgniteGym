@@ -75,11 +75,16 @@ export class StudentService {
     }
   }
 
-  static async list(slug: string) {
+  static async list(slug: string, includeInactive = false) {
     const tenantId = await this.resolveTenantId(slug);
+    const whereClause: Record<string, unknown> = { tenant_id: tenantId };
+
+    if (!includeInactive) {
+      whereClause.is_active = true;
+    }
 
     return Student.findAll({
-      where: { tenant_id: tenantId, is_active: true },
+      where: whereClause,
       include: [{
         model: User,
         as: 'user',
@@ -144,6 +149,26 @@ export class StudentService {
 
     await User.update(
       { is_active: false },
+      { where: { id: student.user_id } }
+    );
+
+    return student;
+  }
+
+  static async reactivate(studentId: string, slug: string) {
+    const tenantId = await this.resolveTenantId(slug);
+
+    const student = await Student.findOne({
+      where: { id: studentId, tenant_id: tenantId },
+    });
+
+    if (!student) throw new AppError('Aluno nao encontrado.', 404);
+
+    student.is_active = true;
+    await student.save();
+
+    await User.update(
+      { is_active: true },
       { where: { id: student.user_id } }
     );
 

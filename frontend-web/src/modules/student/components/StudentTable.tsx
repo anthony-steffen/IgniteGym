@@ -1,4 +1,4 @@
-import { Edit, History, Trash2 } from 'lucide-react';
+import { Edit, History, RotateCcw, Trash2 } from 'lucide-react';
 import type { Student } from '../types';
 
 interface StudentTableProps {
@@ -54,9 +54,11 @@ export function StudentTable({ students, onEdit, onDelete, onHistory }: StudentT
                   </button>
                   <button 
                     onClick={() => onDelete(student.id)} 
-                    className="btn btn-ghost btn-xs text-error p-0 h-auto min-h-0"
+                    className={`btn btn-ghost btn-xs p-0 h-auto min-h-0 ${
+                      student.user.is_active ? 'text-error' : 'text-success'
+                    }`}
                   >
-                    <Trash2 size={16} />
+                    {student.user.is_active ? <Trash2 size={16} /> : <RotateCcw size={16} />}
                   </button>
                 </td>
               </tr>

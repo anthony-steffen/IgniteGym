@@ -14,14 +14,15 @@ export function StudentPage() {
 	const { slug } = useParams<{ slug: string }>();
 	
 	// 2. Passa o slug para o hook para que as requisições usem a rota correta
-	const {
+  const {
 		students,
 		isLoading,
 		createStudent,
 		deactivateStudent,
+    reactivateStudent,
 		updateStudent,
     getStudentHistory,
-	} = useStudents(slug);
+	} = useStudents(slug, { includeInactive: true });
 
 
 
@@ -113,9 +114,19 @@ export function StudentPage() {
 				}}
         onHistory={handleOpenHistory}
 				onDelete={(id) => {
-					if (confirm("Deseja realmente desativar este aluno?")) {
-						deactivateStudent(id);
-					}
+          const targetStudent = students.find((student) => student.id === id);
+          if (!targetStudent) return;
+
+          if (targetStudent.user?.is_active) {
+            if (confirm("Deseja realmente desativar este aluno?")) {
+              deactivateStudent(id);
+            }
+            return;
+          }
+
+          if (confirm("Deseja reativar este aluno?")) {
+            reactivateStudent(id);
+          }
 				}}
 			/>
 

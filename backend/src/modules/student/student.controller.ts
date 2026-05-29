@@ -24,7 +24,9 @@ export class StudentController {
   static async list(req: Request, res: Response) {
     try {
       const { slug } = req.params; 
-      const students = await StudentService.list(slug);
+      const includeInactiveRaw = String(req.query.includeInactive || '').toLowerCase();
+      const includeInactive = includeInactiveRaw === 'true' || includeInactiveRaw === '1';
+      const students = await StudentService.list(slug, includeInactive);
       return res.json(students);
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
@@ -49,6 +51,17 @@ export class StudentController {
       const { slug, id } = req.params; // URL: /students/:slug/:id/deactivate
 
       const student = await StudentService.deactivate(id, slug);
+      return res.json(student);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  }
+
+  static async reactivate(req: Request, res: Response) {
+    try {
+      const { slug, id } = req.params;
+      const student = await StudentService.reactivate(id, slug);
       return res.json(student);
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;

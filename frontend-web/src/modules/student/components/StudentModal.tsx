@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Student, StudentFormData } from '../types';
 
 interface StudentModalProps {
@@ -9,13 +9,21 @@ interface StudentModalProps {
 }
 
 export function StudentModal({ isOpen, onClose, onSave, selectedStudent }: StudentModalProps) {
-  const initialFormData: StudentFormData = {
-    name: selectedStudent?.user.name ?? '',
-    email: selectedStudent?.user.email ?? '',
-    phone: selectedStudent?.user.phone ?? '',
-  };
+  const [formData, setFormData] = useState<StudentFormData>({
+    name: '',
+    email: '',
+    phone: '',
+  });
 
-  const [formData, setFormData] = useState<StudentFormData>(initialFormData);
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setFormData({
+      name: selectedStudent?.user.name ?? '',
+      email: selectedStudent?.user.email ?? '',
+      phone: selectedStudent?.user.phone ?? '',
+    });
+  }, [isOpen, selectedStudent]);
 
   if (!isOpen) return null;
 
