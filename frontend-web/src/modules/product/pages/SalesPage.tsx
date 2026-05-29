@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import { useInventory } from '../../../hooks/useInventory';
 import { useStudents } from '../../../hooks/useStudents';
 import { useSales, type SalePaymentMethod } from '../../../hooks/useSales';
+import type { Product } from '../types';
+import type { Student } from '../../student/types';
 import {
   ShoppingCart,
   Plus,
@@ -63,7 +65,7 @@ export function SalesPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: Product) => {
     setCart((current) => {
       const maxStock = Number(product.stock_quantity || 0);
       if (maxStock <= 0) return current;
@@ -311,7 +313,7 @@ type CartContentProps = {
   updateQty: (id: string, delta: number) => void;
   onClose: () => void;
   isMobile: boolean;
-  students: any[];
+  students: Student[];
   studentId: string;
   setStudentId: (id: string) => void;
   paymentMethod: SalePaymentMethod;
@@ -355,7 +357,7 @@ function CartContent({
           onChange={(event) => setStudentId(event.target.value)}
         >
           <option value="">Venda avulsa (sem aluno)</option>
-          {students.map((student: any) => (
+          {students.map((student: Student) => (
             <option key={student.id} value={student.id}>
               {student.user?.name}
             </option>
