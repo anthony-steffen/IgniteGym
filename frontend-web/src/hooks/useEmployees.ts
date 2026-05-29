@@ -11,6 +11,7 @@ interface UpdateEmployeePayload {
 interface UseEmployeesOptions {
   loadEmployees?: boolean;
   loadEligibleUsers?: boolean;
+  includeInactive?: boolean;
 }
 
 export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
@@ -18,6 +19,7 @@ export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
   const tenantSlug = normalizeTenantSlug(slug);
   const shouldLoadEmployees = options?.loadEmployees ?? true;
   const shouldLoadEligibleUsers = options?.loadEligibleUsers ?? true;
+  const includeInactive = options?.includeInactive ?? false;
 
   const requireSlug = () => {
     if (!tenantSlug) throw new Error('Unidade invalida para esta operacao.');
@@ -26,9 +28,10 @@ export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
 
   // 1. LISTAGEM
   const employeesQuery = useQuery<Employee[]>({
-    queryKey: ['employees', tenantSlug],
+    queryKey: ['employees', tenantSlug, includeInactive],
     queryFn: async () => {
-      const { data } = await api.get<Employee[]>(`/employees/${tenantSlug}`);
+      const query = includeInactive ? '?includeInactive=true' : '';
+      const { data } = await api.get<Employee[]>(`/employees/${tenantSlug}${query}`);
       return data;
     },
     enabled: !!tenantSlug && shouldLoadEmployees,
@@ -77,6 +80,16 @@ export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
     },
   });
 
+  const reactivateEmployeeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const targetSlug = requireSlug();
+      await api.patch(`/employees/${targetSlug}/${id}/reactivate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees', tenantSlug] });
+    },
+  });
+
   return {
     employees: employeesQuery.data ?? [],
     eligibleUsers: eligibleUsersQuery.data ?? [],
@@ -86,5 +99,6 @@ export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
     createEmployee: createEmployeeMutation.mutateAsync,
     updateEmployee: updateEmployeeMutation.mutateAsync,
     deleteEmployee: deleteEmployeeMutation.mutateAsync,
+    reactivateEmployee: reactivateEmployeeMutation.mutateAsync,
   };
 }
