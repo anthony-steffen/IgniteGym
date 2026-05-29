@@ -62,6 +62,32 @@ export class SubscriptionController {
     }
   };
 
+  reactivate = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId as string;
+
+      const subscription = await this.service.reactivate(id, tenantId, req.body);
+      return res.status(201).json(subscription);
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  };
+
+  remove = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId as string;
+
+      await this.service.remove(id, tenantId);
+      return res.status(204).send();
+    } catch (error: any) {
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
+    }
+  };
+
   payment = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;

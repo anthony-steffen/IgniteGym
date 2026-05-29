@@ -7,24 +7,15 @@ import { roleMiddleware } from '../../middlewares/roleMiddleware';
 const router = Router();
 const controller = new SubscriptionController();
 
-// Tradutor de slug para tenantId (UUID)
 router.param('slug', tenantTranslate);
-
 router.use(authMiddleware);
 
-// GET /subscriptions/academia-exemplo -> Lista matrículas da unidade
 router.get('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.list);
-
-// POST /subscriptions/academia-exemplo -> Matricula um aluno em um plano
 router.post('/:slug', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.create);
-
-// PUT /subscriptions/academia-exemplo/:id -> Renova ou altera matrícula
 router.put('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.update);
-
-// DELETE /subscriptions/academia-exemplo/:id -> Cancela matrícula
 router.delete('/:slug/:id', roleMiddleware(['ADMIN', 'MANAGER']), controller.cancel);
-
-// PATCH /subscriptions/academia-exemplo/:id/payment -> Atualiza status de pagamento
+router.patch('/:slug/:id/reactivate', roleMiddleware(['ADMIN', 'MANAGER']), controller.reactivate);
+router.delete('/:slug/:id/permanent', roleMiddleware(['ADMIN', 'MANAGER']), controller.remove);
 router.patch('/:slug/:id/payment', roleMiddleware(['ADMIN', 'MANAGER', 'STAFF']), controller.payment);
 
 export default router;

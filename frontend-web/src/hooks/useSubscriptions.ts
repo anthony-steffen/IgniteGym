@@ -50,6 +50,33 @@ export function useSubscriptions() {
     }
   });
 
+  const changePlan = useMutation({
+    mutationFn: async ({ id, newPlanId }: { id: string; newPlanId: string }) => {
+      return api.put(`/subscriptions/${requireSlug()}/${id}`, { newPlanId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions', tenantSlug] });
+    }
+  });
+
+  const reactivateSubscription = useMutation({
+    mutationFn: async ({ id, planId, paymentStatus }: { id: string; planId?: string; paymentStatus?: PaymentStatus }) => {
+      return api.patch(`/subscriptions/${requireSlug()}/${id}/reactivate`, { planId, paymentStatus });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions', tenantSlug] });
+    }
+  });
+
+  const deleteSubscription = useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete(`/subscriptions/${requireSlug()}/${id}/permanent`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions', tenantSlug] });
+    }
+  });
+
   return {
     subscriptions: subscriptionsQuery.data ?? [],
     isLoading: subscriptionsQuery.isLoading,
@@ -61,5 +88,11 @@ export function useSubscriptions() {
     isCanceling: cancelSubscription.isPending,
     updatePaymentStatus: updatePaymentStatus.mutateAsync,
     isUpdatingPayment: updatePaymentStatus.isPending,
+    changePlan: changePlan.mutateAsync,
+    isChangingPlan: changePlan.isPending,
+    reactivateSubscription: reactivateSubscription.mutateAsync,
+    isReactivating: reactivateSubscription.isPending,
+    deleteSubscription: deleteSubscription.mutateAsync,
+    isDeletingSubscription: deleteSubscription.isPending,
   };
 }
