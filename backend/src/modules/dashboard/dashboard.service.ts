@@ -32,7 +32,15 @@ export class DashboardService {
     const dayEnd = endOfDay(now);
     const monthStart = startOfMonth(now);
 
-    const [totalStudents, activeSubscriptions, checkinsTodayRaw, pendingPayments, newSubscriptionsMonth, monthlyRevenueRaw] =
+    const [
+      totalStudents,
+      activeSubscriptions,
+      checkinsTodayRaw,
+      pendingPayments,
+      newSubscriptionsMonth,
+      monthlySalesRevenueRaw,
+      monthlySubscriptionsRevenueRaw,
+    ] =
       await Promise.all([
         Student.count({ where: { tenant_id: tenantId, is_active: true } }),
         Subscription.count({ where: { tenant_id: tenantId, status: 'ACTIVE' } }),
@@ -61,25 +69,47 @@ export class DashboardService {
             created_at: { [Op.gte]: monthStart },
           } as any,
         }),
+        Subscription.sum('price', {
+          where: {
+            tenant_id: tenantId,
+            payment_status: 'PAID',
+            [Op.or]: [
+              { last_payment_at: { [Op.gte]: monthStart } },
+              {
+                // fallback para registros antigos com pagamento em dia e sem last_payment_at preenchido
+                last_payment_at: null,
+                created_at: { [Op.gte]: monthStart },
+              },
+            ],
+          } as any,
+        }),
       ]);
 
-    const weeklyCheckins: { label: string; total: number; date: string }[] = [];
-    for (let i = 6; i >= 0; i -= 1) {
-      const target = new Date(now);
-      target.setDate(now.getDate() - i);
-      const countRaw = await CheckIn.count({
-        where: {
-          tenant_id: tenantId,
-          created_at: { [Op.between]: [startOfDay(target), endOfDay(target)] },
-        } as any,
-      });
+    const monthlySalesRevenue = Number(monthlySalesRevenueRaw || 0);
+    const monthlySubscriptionsRevenue = Number(monthlySubscriptionsRevenueRaw || 0);
 
-      weeklyCheckins.push({
-        label: formatWeekday(target).toUpperCase(),
-        total: Number(countRaw),
-        date: target.toISOString().slice(0, 10),
-      });
-    }
+    const weekDays = Array.from({ length: 7 }, (_, idx) => {
+      const target = new Date(now);
+      target.setDate(now.getDate() - (6 - idx));
+      return target;
+    });
+
+    const weeklyCheckinCounts = await Promise.all(
+      weekDays.map((target) =>
+        CheckIn.count({
+          where: {
+            tenant_id: tenantId,
+            created_at: { [Op.between]: [startOfDay(target), endOfDay(target)] },
+          } as any,
+        })
+      )
+    );
+
+    const weeklyCheckins = weekDays.map((target, index) => ({
+      label: formatWeekday(target).toUpperCase(),
+      total: Number(weeklyCheckinCounts[index]),
+      date: target.toISOString().slice(0, 10),
+    }));
 
     return {
       metrics: {
@@ -88,7 +118,7 @@ export class DashboardService {
         checkinsToday: Number(checkinsTodayRaw),
         pendingPayments,
         newSubscriptionsMonth,
-        monthlyRevenue: Number(monthlyRevenueRaw || 0),
+        monthlyRevenue: monthlySalesRevenue + monthlySubscriptionsRevenue,
       },
       weeklyCheckins,
       generatedAt: now.toISOString(),
