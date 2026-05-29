@@ -5,7 +5,7 @@ import { ProductModal } from "../components/ProductMdal";
 import { Plus, Pencil, Trash2, PackageSearch } from "lucide-react";
 
 export function ProductPage() {
-	const { products, isLoading, deleteProduct } = useInventory();
+	const { products, isLoading, isError, hasValidSlug, deleteProduct } = useInventory();
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -29,12 +29,32 @@ export function ProductPage() {
 		}
 	};
 
+	if (!hasValidSlug) {
+		return (
+			<div className="alert alert-warning">
+				<span className="text-xs font-bold uppercase">
+					Unidade invalida na URL. Volte para o dashboard da unidade e tente novamente.
+				</span>
+			</div>
+		);
+	}
+
 	if (isLoading) {
 		return (
 			<div className="flex flex-col items-center justify-center p-20 gap-4">
 				<div className="loading loading-spinner loading-lg text-primary"></div>
 				<span className="uppercase font-black italic animate-pulse text-gray-400">
 					Sincronizando Inventário...
+				</span>
+			</div>
+		);
+	}
+
+	if (isError) {
+		return (
+			<div className="alert alert-error">
+				<span className="text-xs font-bold uppercase">
+					Nao foi possivel carregar o inventario desta unidade.
 				</span>
 			</div>
 		);

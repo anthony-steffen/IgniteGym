@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { DashboardResponse } from '../modules/home/types';
+import { normalizeTenantSlug } from '../utils/tenantSlug';
 
 const EMPTY_DASHBOARD: DashboardResponse = {
   metrics: {
@@ -18,14 +19,15 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 
 export function useDashboard() {
   const { slug } = useParams();
+  const tenantSlug = normalizeTenantSlug(slug);
 
   const dashboardQuery = useQuery<DashboardResponse>({
-    queryKey: ['dashboard', slug],
+    queryKey: ['dashboard', tenantSlug],
     queryFn: async () => {
-      const response = await api.get<DashboardResponse>(`/dashboard/${slug}`);
+      const response = await api.get<DashboardResponse>(`/dashboard/${tenantSlug}`);
       return response.data;
     },
-    enabled: !!slug,
+    enabled: !!tenantSlug,
     refetchInterval: 60000,
   });
 
@@ -33,5 +35,6 @@ export function useDashboard() {
     dashboard: dashboardQuery.data ?? EMPTY_DASHBOARD,
     isLoading: dashboardQuery.isLoading,
     isError: dashboardQuery.isError,
+    hasValidSlug: !!tenantSlug,
   };
 }

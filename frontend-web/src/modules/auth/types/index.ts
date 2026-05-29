@@ -2,12 +2,12 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  tenant_id: string;
+  tenant_id: string | null;
+  slug: string | null;
   role: 'ADMIN' | 'MANAGER' | 'STAFF' | 'STUDENT';
 }
 
 export interface AuthResponse {
-  slug: string;
   token: string;
   user: User;
 }

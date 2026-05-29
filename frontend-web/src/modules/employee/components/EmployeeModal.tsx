@@ -48,7 +48,10 @@ interface EmployeeModalProps {
 }
 
 export function EmployeeModal({ isOpen, onClose, slug, selectedEmployee }: EmployeeModalProps) {
-  const { eligibleUsers, createEmployee, updateEmployee } = useEmployees(slug);
+  const { eligibleUsers, createEmployee, updateEmployee } = useEmployees(slug, {
+    loadEmployees: false,
+    loadEligibleUsers: isOpen,
+  });
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "promote">("create");
 

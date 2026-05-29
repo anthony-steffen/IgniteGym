@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import type { Student, StudentFormData, StudentHistoryData } from '../modules/student/types';
+import { normalizeTenantSlug } from '../utils/tenantSlug';
 
 /**
  * Hook para gestão de alunos consumindo a API baseada em Slug
@@ -8,36 +9,44 @@ import type { Student, StudentFormData, StudentHistoryData } from '../modules/st
  */
 export function useStudents(slug?: string) {
   const queryClient = useQueryClient();
+  const tenantSlug = normalizeTenantSlug(slug);
+
+  const requireSlug = () => {
+    if (!tenantSlug) throw new Error('Unidade invalida para esta operacao.');
+    return tenantSlug;
+  };
 
   // 1. LISTAGEM (GET /students/:slug)
   const studentsQuery = useQuery({
-    queryKey: ['students', slug],
+    queryKey: ['students', tenantSlug],
     queryFn: async () => {
-      const { data } = await api.get<Student[]>(`/students/${slug}`);
+      const { data } = await api.get<Student[]>(`/students/${tenantSlug}`);
       return data;
     },
-    enabled: !!slug, // Só executa se o slug estiver presente
+    enabled: !!tenantSlug,
   });
 
   // 2. CRIAÇÃO (POST /students/:slug)
   const createStudentMutation = useMutation({
     mutationFn: async (payload: StudentFormData) => {
-      const { data } = await api.post(`/students/${slug}`, payload);
+      const targetSlug = requireSlug();
+      const { data } = await api.post(`/students/${targetSlug}`, payload);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', slug] });
+      queryClient.invalidateQueries({ queryKey: ['students', tenantSlug] });
     },
   });
 
   // 3. ATUALIZAÇÃO (PUT /students/:slug/:id)
   const updateStudentMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: StudentFormData }) => {
-      const { data: response } = await api.put(`/students/${slug}/${id}`, data);
+      const targetSlug = requireSlug();
+      const { data: response } = await api.put(`/students/${targetSlug}/${id}`, data);
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', slug] });
+      queryClient.invalidateQueries({ queryKey: ['students', tenantSlug] });
     },
   });
 
@@ -45,16 +54,18 @@ export function useStudents(slug?: string) {
   // Nota: O Controller usa StudentService.deactivate, geralmente mapeado para PATCH ou DELETE
   const deactivateStudentMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await api.patch(`/students/${slug}/${id}/deactivate`);
+      const targetSlug = requireSlug();
+      const { data } = await api.patch(`/students/${targetSlug}/${id}/deactivate`);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', slug] });
+      queryClient.invalidateQueries({ queryKey: ['students', tenantSlug] });
     },
   });
 
   const getStudentHistory = async (id: string) => {
-    const { data } = await api.get<StudentHistoryData>(`/students/${slug}/${id}/history`);
+    const targetSlug = requireSlug();
+    const { data } = await api.get<StudentHistoryData>(`/students/${targetSlug}/${id}/history`);
     return data;
   };
 
@@ -62,6 +73,7 @@ export function useStudents(slug?: string) {
     students: studentsQuery.data ?? [],
     isLoading: studentsQuery.isLoading,
     isError: studentsQuery.isError,
+    hasValidSlug: !!tenantSlug,
     createStudent: createStudentMutation.mutateAsync,
     updateStudent: updateStudentMutation.mutateAsync,
     deactivateStudent: deactivateStudentMutation.mutateAsync,

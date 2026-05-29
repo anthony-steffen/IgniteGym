@@ -2,36 +2,40 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom'; // 👈 Adicionado
 import { api } from '../services/api';
 import type { Tenant, UpdateUnitFormData } from '../modules/tenant/types';
+import { normalizeTenantSlug } from '../utils/tenantSlug';
 
 export function useTenant() {
   const queryClient = useQueryClient();
   const { slug } = useParams();
+  const tenantSlug = normalizeTenantSlug(slug);
+
+  const requireSlug = () => {
+    if (!tenantSlug) throw new Error('Unidade invalida para esta operacao.');
+    return tenantSlug;
+  };
 
   const { data: unit, isLoading } = useQuery({
-    queryKey: ['tenant', slug],
+    queryKey: ['tenant', tenantSlug],
     queryFn: async () => {
-      // Rota normalizada: /tenants/academia-exemplo
-      const response = await api.get<Tenant>(`/tenants/${slug}`);
+      const response = await api.get<Tenant>(`/tenants/${tenantSlug}`);
       return response.data;
     },
-    enabled: !!slug,
+    enabled: !!tenantSlug,
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateUnitFormData) => {
-      // Rota normalizada para update
-      const response = await api.put<Tenant>(`/tenants/${slug}`, data);
+      const response = await api.put<Tenant>(`/tenants/${requireSlug()}`, data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenant', slug] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenantSlug] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      // Rota normalizada para delete
-      await api.delete(`/tenants/${slug}`);
+      await api.delete(`/tenants/${requireSlug()}`);
     },
     onSuccess: () => {
       // Ao deletar a unidade, limpamos tudo e voltamos pro registro
@@ -43,6 +47,7 @@ export function useTenant() {
   return {
     unit,
     isLoading,
+    hasValidSlug: !!tenantSlug,
     updateUnit: updateMutation.mutate,
     isUpdating: updateMutation.isPending,
     deleteUnit: deleteMutation.mutate,

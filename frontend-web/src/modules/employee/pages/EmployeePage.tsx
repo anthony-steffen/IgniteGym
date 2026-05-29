@@ -10,7 +10,9 @@ import type { Employee } from "../types";
 
 export function EmployeePage() {
   const { slug } = useParams<{ slug: string }>();
-  const { employees, deleteEmployee, isLoading } = useEmployees(slug);
+  const { employees, deleteEmployee, isLoading, isError, hasValidSlug } = useEmployees(slug, {
+    loadEligibleUsers: false,
+  });
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -32,10 +34,30 @@ export function EmployeePage() {
     emp.roleTitle.toLowerCase().includes(normalizedSearch)
   );
 
+  if (!hasValidSlug) {
+    return (
+      <div className="alert alert-warning">
+        <span className="text-xs font-bold uppercase">
+          Unidade invalida na URL. Volte para o dashboard da unidade e tente novamente.
+        </span>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="alert alert-error">
+        <span className="text-xs font-bold uppercase">
+          Nao foi possivel carregar funcionarios desta unidade.
+        </span>
       </div>
     );
   }

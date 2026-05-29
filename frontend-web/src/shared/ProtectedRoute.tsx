@@ -1,42 +1,66 @@
-import { Navigate, Outlet, useParams } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
+import { normalizeTenantSlug } from '../utils/tenantSlug';
+
+type StoredUser = {
+  tenant_id?: string | null;
+  slug?: string | null;
+};
+
+function readStoredUser(): StoredUser | null {
+  const userJson = localStorage.getItem('@IgniteGym:user');
+  if (!userJson) return null;
+
+  try {
+    return JSON.parse(userJson) as StoredUser;
+  } catch {
+    return null;
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem('@IgniteGym:token');
+  localStorage.removeItem('@IgniteGym:user');
+}
 
 export function ProtectedRoute() {
   const token = localStorage.getItem('@IgniteGym:token');
-  const userJson = localStorage.getItem('@IgniteGym:user');
   const { slug } = useParams();
+  const location = useLocation();
 
-  // 1. Se não existir token, manda para o login
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  const user = userJson ? JSON.parse(userJson) : null;
+  const user = readStoredUser();
+  if (!user) {
+    clearSession();
+    return <Navigate to="/login" replace />;
+  }
 
-  // 2. Se o usuário for um Administrador de Unidade (tem tenant_id)
-  if (user?.tenant_id) {
-    
-    // Se ele acessou uma rota sem slug (ex: /home), redireciona para a dele
-    if (!slug) {
-      return <Navigate to={`/${user.slug}/home`} replace />;
+  const requestedSlug = normalizeTenantSlug(slug);
+
+  // Usuario de unidade: sempre opera apenas no proprio slug
+  if (user.tenant_id) {
+    const ownSlug = normalizeTenantSlug(user.slug);
+
+    if (!ownSlug) {
+      clearSession();
+      return <Navigate to="/login" replace />;
     }
 
-    // BLINDAGEM: Se o slug da URL for diferente do slug dele, bloqueia o acesso
-    // Isso impede que dono-a acesse /dono-b/home
-    if (user.slug !== slug) {
-      console.warn("Acesso negado: Tentativa de acesso a unidade alheia.");
-      return <Navigate to={`/${user.slug}/home`} replace />;
+    if (!requestedSlug || requestedSlug !== ownSlug) {
+      return <Navigate to={`/${ownSlug}/home`} replace />;
     }
   }
 
-  // 3. Se for Super-Admin (não tem tenant_id)
-  if (!user?.tenant_id) {
-    // Se o Super-Admin tentar acessar a raiz sem slug, mandamos para o dashboard global
-    if (!slug && window.location.pathname !== '/admin/dashboard') {
+  // Super-admin: sem slug entra no dashboard global.
+  // Se vier slug invalido (ex: "undefined"), normaliza para /admin/dashboard.
+  if (!user.tenant_id) {
+    const isAdminArea = location.pathname.startsWith('/admin');
+    if (!requestedSlug && !isAdminArea) {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    // O Super-Admin pode acessar qualquer slug (Modo Suporte), então não bloqueamos o acesso a slugs diferentes.
   }
 
-  // 4. Se estiver tudo ok, renderiza a página
   return <Outlet />;
 }

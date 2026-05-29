@@ -5,8 +5,8 @@ interface User {
   id: string;
   name: string;
   email: string;
-  tenant_id: string;
-  slug: string;
+  tenant_id: string | null;
+  slug: string | null;
 }
 
 interface AuthContextData {

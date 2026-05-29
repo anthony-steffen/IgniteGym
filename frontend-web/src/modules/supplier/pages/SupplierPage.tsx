@@ -6,7 +6,7 @@ import { Plus, Trash2, Building2, Pencil, Mail, Phone } from "lucide-react";
 import type { Supplier } from "../types";
 
 export function SupplierPage() {
-  const { suppliers, isLoading, deleteSupplier, createSupplier, updateSupplier } = useSuppliers();
+  const { suppliers, isLoading, isError, hasValidSlug, deleteSupplier, createSupplier, updateSupplier } = useSuppliers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
@@ -34,6 +34,16 @@ export function SupplierPage() {
     }
   };
 
+  if (!hasValidSlug) {
+    return (
+      <div className="alert alert-warning">
+        <span className="text-xs font-bold uppercase">
+          Unidade invalida na URL. Volte para o dashboard da unidade e tente novamente.
+        </span>
+      </div>
+    );
+  }
+
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4">
       <div className="loading loading-spinner loading-lg text-primary"></div>
@@ -42,6 +52,16 @@ export function SupplierPage() {
       </span>
     </div>
   );
+
+  if (isError) {
+    return (
+      <div className="alert alert-error">
+        <span className="text-xs font-bold uppercase">
+          Nao foi possivel carregar fornecedores desta unidade.
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">

@@ -1,62 +1,79 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import type { CreateEmployeePayload, EligibleUser, Employee } from '../modules/employee/types';
+import { normalizeTenantSlug } from '../utils/tenantSlug';
 
 interface UpdateEmployeePayload {
   id: string;
   payload: Pick<CreateEmployeePayload, 'roleTitle' | 'salary' | 'weeklyHours' | 'workSchedule'>;
 }
 
-export function useEmployees(slug?: string) {
+interface UseEmployeesOptions {
+  loadEmployees?: boolean;
+  loadEligibleUsers?: boolean;
+}
+
+export function useEmployees(slug?: string, options?: UseEmployeesOptions) {
   const queryClient = useQueryClient();
+  const tenantSlug = normalizeTenantSlug(slug);
+  const shouldLoadEmployees = options?.loadEmployees ?? true;
+  const shouldLoadEligibleUsers = options?.loadEligibleUsers ?? true;
+
+  const requireSlug = () => {
+    if (!tenantSlug) throw new Error('Unidade invalida para esta operacao.');
+    return tenantSlug;
+  };
 
   // 1. LISTAGEM
   const employeesQuery = useQuery<Employee[]>({
-    queryKey: ['employees', slug],
+    queryKey: ['employees', tenantSlug],
     queryFn: async () => {
-      const { data } = await api.get<Employee[]>(`/employees/${slug}`);
+      const { data } = await api.get<Employee[]>(`/employees/${tenantSlug}`);
       return data;
     },
-    enabled: !!slug,
+    enabled: !!tenantSlug && shouldLoadEmployees,
   });
 
   // 2. USUÁRIOS ELEGÍVEIS
   const eligibleUsersQuery = useQuery<EligibleUser[]>({
-    queryKey: ['eligible-users', slug],
+    queryKey: ['eligible-users', tenantSlug],
     queryFn: async () => {
-      const { data } = await api.get<EligibleUser[]>(`/employees/${slug}/eligible`);
+      const { data } = await api.get<EligibleUser[]>(`/employees/${tenantSlug}/eligible`);
       return data;
     },
-    enabled: !!slug,
+    enabled: !!tenantSlug && shouldLoadEligibleUsers,
   });
 
   // 3. CRIAÇÃO/ATUALIZAÇÃO
   const createEmployeeMutation = useMutation({
     mutationFn: async (payload: CreateEmployeePayload) => {
-      const { data } = await api.post<Employee>(`/employees/${slug}`, payload);
+      const targetSlug = requireSlug();
+      const { data } = await api.post<Employee>(`/employees/${targetSlug}`, payload);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees', slug] });
+      queryClient.invalidateQueries({ queryKey: ['employees', tenantSlug] });
     },
   });
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, payload }: UpdateEmployeePayload) => {
-      const { data } = await api.put<Employee>(`/employees/${slug}/${id}`, payload);
+      const targetSlug = requireSlug();
+      const { data } = await api.put<Employee>(`/employees/${targetSlug}/${id}`, payload);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees', slug] });
+      queryClient.invalidateQueries({ queryKey: ['employees', tenantSlug] });
     },
   });
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`/employees/${slug}/${id}`);
+      const targetSlug = requireSlug();
+      await api.delete(`/employees/${targetSlug}/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees', slug] });
+      queryClient.invalidateQueries({ queryKey: ['employees', tenantSlug] });
     },
   });
 
@@ -64,6 +81,8 @@ export function useEmployees(slug?: string) {
     employees: employeesQuery.data ?? [],
     eligibleUsers: eligibleUsersQuery.data ?? [],
     isLoading: employeesQuery.isLoading,
+    isError: employeesQuery.isError,
+    hasValidSlug: !!tenantSlug,
     createEmployee: createEmployeeMutation.mutateAsync,
     updateEmployee: updateEmployeeMutation.mutateAsync,
     deleteEmployee: deleteEmployeeMutation.mutateAsync,
