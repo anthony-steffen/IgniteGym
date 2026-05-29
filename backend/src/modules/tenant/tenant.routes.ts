@@ -21,7 +21,7 @@ router.get('/', roleMiddleware(['ADMIN']), TenantController.list);
 router.get('/:slug', TenantController.show); 
 
 // 3. Atualização da Unidade (Dono atualiza a sua, Super Admin atualiza qualquer uma)
-router.put('/:slug', TenantController.update);
+router.put('/:slug', roleMiddleware(['ADMIN', 'MANAGER']), TenantController.update);
 
 // 4. Exclusão (Apenas Super Admin)
 router.delete('/:slug', roleMiddleware(['ADMIN']), TenantController.delete);

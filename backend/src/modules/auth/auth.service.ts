@@ -1,51 +1,69 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../../database/models/user.model";
-import { Tenant } from "../../database/models/tenant.model"; // Importe o modelo de Tenant
+import { Tenant } from "../../database/models/tenant.model";
 import { AppError } from "../../errors/AppError";
 
 export class AuthService {
   static async login(email: string, password: string) {
-    // 1. Busca o usuário INCLUINDO os dados da academia (Tenant)
+    if (!email || !password) {
+      throw new AppError("E-mail e senha são obrigatórios.", 400);
+    }
+
     const user = await User.findOne({ 
       where: { email },
       include: [{
         model: Tenant,
-        as: 'tenant' // Certifique-se que o alias no seu arquivo de associação é 'tenant'
+        as: 'tenant'
       }]
     });
 
-    // 2. Validação de existência
     if (!user) {
       throw new AppError("E-mail ou senha incorretos", 401);
     }
 
-    // 3. Valida a senha
+    if (!user.is_active) {
+      throw new AppError("Usuário inativo. Procure o administrador da unidade.", 403);
+    }
+
+    const tenant = (user as any).tenant as Tenant | undefined;
+
+    if (user.tenant_id && !tenant) {
+      throw new AppError("Unidade vinculada não encontrada.", 403);
+    }
+
+    if (tenant && !tenant.is_active) {
+      throw new AppError("Unidade inativa. Entre em contato com o suporte.", 403);
+    }
+
+    if (!user.password_hash) {
+      throw new AppError("Usuário sem credenciais de login configuradas.", 403);
+    }
+
     const valid = await bcrypt.compare(password, user.password_hash);
-    
+
     if (!valid) {
       throw new AppError("E-mail ou senha incorretos", 401);
     }
 
-    // 4. Verifica se a Secret do JWT existe
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new AppError("Erro interno: JWT_SECRET não configurada no servidor", 500);
+      throw new AppError("Erro interno: JWT_SECRET não configurada no servidor.", 500);
     }
 
-    // 5. Gera o Token (Agora com o slug também no payload, se desejar)
+    await user.update({ last_login_at: new Date() });
+
     const token = jwt.sign(
       {
         userId: user.id,
         tenantId: user.tenant_id,
         role: user.role,
-        slug: (user as any).tenant?.slug, // Adicionamos o slug ao token para facilitar o acesso
+        slug: tenant?.slug ?? null,
       },
       secret,
       { expiresIn: "1d" }
     );
 
-    // 6. Retorna os dados mapeados corretamente
     return {
       token,
       user: {
@@ -54,8 +72,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         tenant_id: user.tenant_id,
-        // Capturamos o slug através do relacionamento que incluímos no passo 1
-        slug: (user as any).tenant?.slug || null, 
+        slug: tenant?.slug ?? null,
       },
     };
   }

@@ -5,15 +5,17 @@ export async function tenantTranslate(req: Request, res: Response, next: NextFun
   const tenant = await Tenant.findOne({ where: { slug } });
 
   if (!tenant) {
-    return res.status(404).json({ message: 'Academia não encontrada.' });
+    return res.status(404).json({ message: 'Academia nao encontrada.' });
   }
 
-  // Se o usuário não for ADMIN, verificamos se ele tem permissão para esta unidade
-  if (req.user?.role !== 'ADMIN' && req.user?.tenantId !== tenant.id) {
+  // Apenas ADMIN global (sem tenantId) pode circular entre unidades.
+  const isSuperAdmin = req.user?.role === 'ADMIN' && !req.user?.tenantId;
+  const isSameTenant = req.user?.tenantId === tenant.id;
+
+  if (!isSuperAdmin && !isSameTenant) {
     return res.status(403).json({ message: 'Acesso negado a esta unidade.' });
   }
 
-  // Injetamos o ID real no request para o Controller usar
-  req.tenantId = tenant.id; 
+  req.tenantId = tenant.id;
   next();
 }
