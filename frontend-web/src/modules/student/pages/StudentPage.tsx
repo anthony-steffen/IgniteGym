@@ -76,18 +76,18 @@ export function StudentPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <Users size={30} className="text-primary" />
-          <h1 className="text-2xl font-black italic uppercase tracking-tighter">
-            Alunos <span className="text-base-content/60">| {slug}</span>
-            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
+          <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter leading-tight">
+            Alunos <span className="block sm:inline text-base-content/60 break-all sm:break-normal">| {slug}</span>
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest mt-1">
               Gestao de membros da unidade
             </p>
           </h1>
         </div>
         <button
-          className="btn btn-primary font-black italic uppercase text-[11px] p-2"
+          className="btn btn-primary font-black italic uppercase text-[11px] p-2 w-full sm:w-auto"
           onClick={() => {
             setSelectedStudent(null);
             setIsModalOpen(true);

@@ -92,7 +92,7 @@ export function EmployeePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full md:w-auto flex-col sm:flex-row sm:items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" size={18} />
             <input
@@ -103,7 +103,7 @@ export function EmployeePage() {
               onChange={(event) => setSearchTerm(event.target.value)}
             />
           </div>
-          <button onClick={handleAddNew} className="btn btn-primary btn-sm gap-2 uppercase font-black italic">
+          <button onClick={handleAddNew} className="btn btn-primary btn-sm gap-2 uppercase font-black italic w-full sm:w-auto">
             <Plus size={20} /> Contratar
           </button>
         </div>

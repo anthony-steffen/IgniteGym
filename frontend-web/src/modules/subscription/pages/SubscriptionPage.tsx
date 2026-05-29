@@ -223,8 +223,8 @@ export function SubscriptionPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-3">
           <BadgeCheck size={34} className="text-primary" />
-          <h1 className="text-2xl font-black italic uppercase tracking-tighter">
-            Inscricoes <span className="text-base-content/60">| {slug}</span>
+          <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter leading-tight">
+            Inscricoes <span className="block sm:inline text-base-content/60 break-all sm:break-normal">| {slug}</span>
             <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
               Matriculas, planos ativos e pagamento
             </p>

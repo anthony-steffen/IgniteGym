@@ -58,18 +58,18 @@ export function ProductPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <PackageSearch className="text-primary" size={35} />
-          <h1 className="text-2xl font-black italic uppercase text-base-content">
+          <h1 className="text-xl sm:text-2xl font-black italic uppercase text-base-content leading-tight">
             Estoque
-            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest mt-1">
               Gestao de produtos
             </p>
           </h1>
         </div>
 
-        <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px] p-2">
+        <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px] p-2 w-full sm:w-auto">
           <Plus size={10} strokeWidth={5} />
           Novo Produto
         </button>

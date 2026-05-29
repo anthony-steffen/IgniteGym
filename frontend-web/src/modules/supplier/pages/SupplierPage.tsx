@@ -68,15 +68,15 @@ export function SupplierPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex justify-between items-center px-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between px-4">
         <div className="flex items-start gap-3">
           <Building2 className="text-primary" size={35} />
-          <h1 className="text-2xl font-black italic uppercase text-base-content leading-none">
+          <h1 className="text-xl sm:text-2xl font-black italic uppercase text-base-content leading-tight">
             Marcas
             <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest mt-1">Fabricantes</p>
           </h1>
         </div>
-        <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px]">
+        <button onClick={() => handleOpenModal()} className="btn btn-primary font-black italic uppercase text-[11px] w-full sm:w-auto">
           <Plus size={12} strokeWidth={4} />
           Fornecedor
         </button>

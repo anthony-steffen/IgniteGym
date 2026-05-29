@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { normalizeTenantSlug } from '../utils/tenantSlug';
+import ThemeToggle from './toggleTheme';
 
 type StoredUser = {
   tenant_id?: string | null;
@@ -72,26 +73,29 @@ export function MainLayout() {
       <input id="main-drawer" type="checkbox" className="drawer-toggle" />
 
       <div className="drawer-content flex flex-col">
-        <header className="navbar bg-base-100 border-b border-base-300 sticky top-0 z-20 w-full px-4">
+        <header className="navbar bg-base-100 border-b border-base-300 sticky top-0 z-20 w-full px-3 sm:px-4 gap-1">
           <div className="flex-none md:hidden">
             <label htmlFor="main-drawer" className="btn btn-square btn-ghost" aria-label="Abrir menu lateral" title="Abrir menu lateral">
               <Menu className="w-6 h-6 text-primary" />
             </label>
           </div>
 
-          <div className="flex-1 px-2 font-bold italic uppercase tracking-tighter">
-            IGNITE<span className="text-primary">GYM</span> -{' '}
-            {tenantSlug ? tenantSlug.replace(/-/g, ' ') : 'painel global'}
+          <div className="flex-1 min-w-0 px-1 sm:px-2 font-bold italic uppercase tracking-tight text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+            <span>
+              IGNITE<span className="text-primary">GYM</span>
+            </span>
+            <span className="hidden sm:inline"> - {tenantSlug ? tenantSlug.replace(/-/g, ' ') : 'painel global'}</span>
           </div>
 
-          <div className="flex-none gap-2">
+          <div className="flex-none flex items-center gap-1 sm:gap-2">
+            <ThemeToggle className="btn-sm" />
             <button
               onClick={handleLogout}
-              className="btn btn-ghost btn-sm text-error gap-2 font-bold uppercase"
+              className="btn btn-ghost btn-sm text-error gap-1 sm:gap-2 font-bold uppercase"
               aria-label="Sair da conta"
               title="Sair da conta"
             >
-              <span className="hidden sm:inline">Sair</span>
+              <span className="hidden md:inline">Sair</span>
               <LogOut size={18} />
             </button>
           </div>

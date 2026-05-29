@@ -157,8 +157,8 @@ export function SalesPage() {
       <div className="drawer-content flex flex-col 2xl:flex-row gap-6 p-2 md:p-6 h-full lg:w-[95%] 2xl:w-[90%] mx-auto">
         <div className="flex-1 flex flex-col min-w-0">
           <header className="flex flex-col gap-4 mb-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-black italic uppercase flex items-center gap-2">
+            <div className="flex justify-between items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black italic uppercase flex items-center gap-2 min-w-0">
                 <Package size={28} className="text-primary" /> Catalogo
               </h1>
               <button
