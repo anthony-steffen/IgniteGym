@@ -43,13 +43,23 @@ export function usePlans() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plans', tenantSlug] })
   });
 
+  const reactivatePlanMutation = useMutation({
+    mutationFn: async (plan: Plan) =>
+      api.put(`/plans/${requireSlug()}/${plan.id}`, {
+        ...plan,
+        is_active: true,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plans', tenantSlug] })
+  });
+
   return {
     plans: plansQuery.data ?? [],
     isLoading: plansQuery.isLoading,
     isError: plansQuery.isError,
     hasValidSlug: !!tenantSlug,
-    createPlan: createPlanMutation.mutate,
-    updatePlan: updatePlanMutation.mutate,
-    deletePlan: deletePlanMutation.mutate
+    createPlan: createPlanMutation.mutateAsync,
+    updatePlan: updatePlanMutation.mutateAsync,
+    deletePlan: deletePlanMutation.mutateAsync,
+    reactivatePlan: reactivatePlanMutation.mutateAsync
   };
 }

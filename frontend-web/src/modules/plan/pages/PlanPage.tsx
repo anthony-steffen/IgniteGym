@@ -7,7 +7,7 @@ import { PlanModal } from '../components/PlanModal';
 import type { Plan } from '../types/index';
 
 export function PlanPage() {
-  const { plans, isLoading, deletePlan, createPlan, updatePlan } = usePlans();
+  const { plans, isLoading, deletePlan, createPlan, updatePlan, reactivatePlan } = usePlans();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
@@ -21,20 +21,31 @@ export function PlanPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (data: Plan | Omit<Plan, 'id'>) => {
+  const handleSave = async (data: Plan | Omit<Plan, 'id'>) => {
     if ('id' in data && data.id) {
-      updatePlan(data as Plan);
+      await updatePlan(data as Plan);
     } else {
-      createPlan(data as Omit<Plan, 'id'>);
+      await createPlan(data as Omit<Plan, 'id'>);
     }
     setIsModalOpen(false);
   };
 
-  if (isLoading) return <span className="loading loading-dots loading-lg text-primary"></span>;
+  const handleDeactivate = async (id: string) => {
+    if (!confirm('Deseja desativar este plano?')) return;
+    await deletePlan(id);
+  };
+
+  const handleReactivate = async (plan: Plan) => {
+    if (!confirm('Deseja reativar este plano?')) return;
+    await reactivatePlan(plan);
+  };
+
+  if (isLoading) {
+    return <span className="loading loading-dots loading-lg text-primary"></span>;
+  }
 
   return (
     <div className="w-full space-y-6">
-      {/* Header da Página */}
       <div className="flex justify-between">
         <div className="flex items-start gap-3">
           <ScrollText className="text-primary" size={35} />
@@ -46,23 +57,25 @@ export function PlanPage() {
           </h1>
         </div>
         <button
-          onClick={() => handleOpenCreateModal()}
-          className="btn btn-primary font-black italic uppercase text-[11px] p-2">
+          onClick={handleOpenCreateModal}
+          className="btn btn-primary font-black italic uppercase text-[11px] p-2"
+        >
           <Plus size={10} strokeWidth={5} />
           Novo Plano
         </button>
       </div>
 
       <PlanStats plans={plans} />
-      
-      <PlanTable 
-        plans={plans} 
-        onEdit={handleOpenEditModal} 
-        onDelete={(id) => confirm("Excluir?") && deletePlan(id)} 
+
+      <PlanTable
+        plans={plans}
+        onEdit={handleOpenEditModal}
+        onDeactivate={handleDeactivate}
+        onReactivate={handleReactivate}
       />
 
-      <PlanModal 
-        isOpen={isModalOpen} 
+      <PlanModal
+        isOpen={isModalOpen}
         selectedPlan={selectedPlan}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}

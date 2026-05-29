@@ -4,6 +4,7 @@ export interface Plan {
   name: string;
   duration_days: number; // Padronizado conforme seu erro de TS
   price: number;
+  is_active?: boolean;
   created_at?: string;
 }
 
