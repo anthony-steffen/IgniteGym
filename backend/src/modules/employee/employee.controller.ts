@@ -54,7 +54,8 @@ export class EmployeeController {
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params; // ID do Employee continua sendo UUID
-      const employee = await EmployeeService.update(id, req.body);
+      const tenantId = req.tenantId as string;
+      const employee = await EmployeeService.update(id, tenantId, req.body);
       
       return res.json(employee);
     } catch (error: any) {
@@ -69,7 +70,8 @@ export class EmployeeController {
   static async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      await EmployeeService.deactivate(id);
+      const tenantId = req.tenantId as string;
+      await EmployeeService.deactivate(id, tenantId);
       return res.status(204).send();
     } catch (error: any) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;

@@ -67,8 +67,11 @@ export class EmployeeService {
     }));
   }
 
-  static async update(id: string, data: any) {
-    const employee = await Employee.findByPk(id, { include: [{ model: User, as: 'user' }] });
+  static async update(id: string, tenantId: string, data: any) {
+    const employee = await Employee.findOne({
+      where: { id, tenant_id: tenantId },
+      include: [{ model: User, as: 'user' }]
+    });
     if (!employee) throw new AppError('Colaborador não encontrado.', 404);
 
     return await sequelize.transaction(async (t) => {
@@ -84,8 +87,8 @@ export class EmployeeService {
     });
   }
 
-  static async deactivate(id: string) {
-    const employee = await Employee.findByPk(id);
+  static async deactivate(id: string, tenantId: string) {
+    const employee = await Employee.findOne({ where: { id, tenant_id: tenantId } });
     if (!employee) throw new AppError('Colaborador não encontrado.', 404);
     await employee.update({ is_active: false });
   }
