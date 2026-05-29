@@ -51,15 +51,12 @@ export function PlanPage() {
           <ScrollText className="text-primary" size={35} />
           <h1 className="text-2xl font-black italic uppercase text-base-content">
             Planos
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
               Gerenciamento de planos
             </p>
           </h1>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="btn btn-primary font-black italic uppercase text-[11px] p-2"
-        >
+        <button onClick={handleOpenCreateModal} className="btn btn-primary font-black italic uppercase text-[11px] p-2">
           <Plus size={10} strokeWidth={5} />
           Novo Plano
         </button>

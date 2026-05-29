@@ -26,37 +26,37 @@ export function HomePage() {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-blue-900 border-r-4">
           <div className="stat-figure text-blue-900"><Users size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Total Alunos</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Total Alunos</div>
           <div className="stat-value text-2xl tracking-tighter">{metrics.totalStudents}</div>
         </div>
 
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-emerald-700 border-r-4">
           <div className="stat-figure text-emerald-700"><CircleDollarSign size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Receita do Mes</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Receita do Mes</div>
           <div className="stat-value text-2xl tracking-tighter">{formatCurrency(metrics.monthlyRevenue)}</div>
         </div>
 
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-violet-700 border-r-4">
           <div className="stat-figure text-violet-700"><Activity size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Check-ins Hoje</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Check-ins Hoje</div>
           <div className="stat-value text-2xl tracking-tighter">{metrics.checkinsToday}</div>
         </div>
 
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-amber-600 border-r-4">
           <div className="stat-figure text-amber-600"><UserPlus size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Matriculas (Mes)</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Matriculas (Mes)</div>
           <div className="stat-value text-2xl tracking-tighter">{metrics.newSubscriptionsMonth}</div>
         </div>
 
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-error border-r-4">
           <div className="stat-figure text-error"><AlertCircle size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Pagamentos Pendentes</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Pagamentos Pendentes</div>
           <div className="stat-value text-2xl tracking-tighter">{metrics.pendingPayments}</div>
         </div>
 
         <div className="stat bg-base-100 shadow rounded-box border-b-4 border-cyan-700 border-r-4">
           <div className="stat-figure text-cyan-700"><Users size={24} /></div>
-          <div className="stat-title text-xs uppercase font-bold text-gray-500">Matriculas Ativas</div>
+          <div className="stat-title text-xs uppercase font-bold text-base-content/60">Matriculas Ativas</div>
           <div className="stat-value text-2xl tracking-tighter">{metrics.activeSubscriptions}</div>
         </div>
       </section>
@@ -83,7 +83,7 @@ export function HomePage() {
                         style={{ height: `${height}%` }}
                       ></div>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">{point.label}</span>
+                    <span className="text-[10px] font-bold text-base-content/60 uppercase">{point.label}</span>
                     <span className="text-[10px] font-black text-primary">{point.total}</span>
                   </div>
                 );

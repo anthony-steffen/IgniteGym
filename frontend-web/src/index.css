@@ -83,3 +83,34 @@
   color: #06f1b3;
   font-weight: 500;
 } */
+
+[data-theme='dark'] .text-gray-600,
+[data-theme='dark'] .text-gray-700,
+[data-theme='dark'] .text-gray-800 {
+  color: color-mix(in srgb, var(--color-base-content) 88%, transparent) !important;
+}
+
+[data-theme='dark'] .text-gray-400,
+[data-theme='dark'] .text-gray-500 {
+  color: color-mix(in srgb, var(--color-base-content) 65%, transparent) !important;
+}
+
+[data-theme='dark'] .text-gray-300,
+[data-theme='dark'] .text-gray-200 {
+  color: color-mix(in srgb, var(--color-base-content) 78%, transparent) !important;
+}
+
+[data-theme='dark'] .bg-white {
+  background-color: var(--color-base-100) !important;
+  color: var(--color-base-content) !important;
+}
+
+[data-theme='dark'] .bg-gray-50 {
+  background-color: color-mix(in srgb, var(--color-base-100) 70%, var(--color-base-200) 30%) !important;
+}
+
+[data-theme='dark'] .border-gray-100,
+[data-theme='dark'] .border-gray-200,
+[data-theme='dark'] .border-gray-300 {
+  border-color: color-mix(in srgb, var(--color-base-content) 20%, transparent) !important;
+}

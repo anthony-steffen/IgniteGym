@@ -60,7 +60,7 @@ export function CheckinScanner() {
             {isRegistering ? (
               <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 text-primary animate-spin" size={18} />
             ) : (
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50" size={18} />
             )}
             <input
               type="text"

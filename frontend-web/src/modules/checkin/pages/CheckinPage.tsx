@@ -25,7 +25,7 @@ export function CheckinPage() {
         <History className="text-primary" size={35} />
         <h1 className="text-2xl font-black italic uppercase text-base-content">
           Fluxo de Acesso
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Controle de presenças</p>
+          <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">Controle de presencas</p>
         </h1>
       </div>
 
@@ -37,7 +37,7 @@ export function CheckinPage() {
         <div className="lg:col-span-7">
           <div className="bg-base-100 rounded-xl border border-base-200 overflow-hidden shadow-sm">
             <div className="p-4 bg-gray-50 border-b border-base-200 flex justify-between items-center">
-              <span className="font-black uppercase italic text-xs text-gray-500">Últimos Acessos</span>
+              <span className="font-black uppercase italic text-xs text-base-content/60">Ultimos acessos</span>
               <span className="badge badge-primary font-bold text-[10px] italic">{checkins.length} REGISTROS</span>
             </div>
 
@@ -51,10 +51,10 @@ export function CheckinPage() {
                   return (
                     <div key={c.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
                       <div className="flex flex-col">
-                        <span className="font-black uppercase italic text-sm text-gray-800">
+                        <span className="font-black uppercase italic text-sm text-base-content">
                           {c.student?.user?.name || 'ALUNO'}
                         </span>
-                        <div className="flex items-center gap-1 text-gray-400">
+                        <div className="flex items-center gap-1 text-base-content/60">
                           <Clock size={12} />
                           <span className="text-[10px] font-bold">
                             {checkinTime ? `${checkinTime} H` : 'Horario indisponivel'}

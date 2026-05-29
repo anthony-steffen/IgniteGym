@@ -1,44 +1,38 @@
-// src/modules/student/pages/StudentPage.tsx
-import { useState } from "react";
-import { useParams } from "react-router-dom"; // Necessário para capturar o slug
-import { Plus, Users } from "lucide-react";
-import { useStudents } from "../../../hooks/useStudents";
-import { StudentStats } from "../components/StudentStats";
-import { StudentTable } from "../components/StudentTable";
-import { StudentModal } from "../components/StudentModal";
-import { StudentHistoryModal } from "../components/StudentHistoryModal";
-import type { Student, StudentFormData, StudentHistoryData, StudentStatsData } from "../types";
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Plus, Users } from 'lucide-react';
+import { useStudents } from '../../../hooks/useStudents';
+import { StudentStats } from '../components/StudentStats';
+import { StudentTable } from '../components/StudentTable';
+import { StudentModal } from '../components/StudentModal';
+import { StudentHistoryModal } from '../components/StudentHistoryModal';
+import type { Student, StudentFormData, StudentHistoryData, StudentStatsData } from '../types';
 
 export function StudentPage() {
-	// 1. Captura o slug da URL (ex: /app/academia-exemplo/students)
-	const { slug } = useParams<{ slug: string }>();
-	
-	// 2. Passa o slug para o hook para que as requisições usem a rota correta
+  const { slug } = useParams<{ slug: string }>();
+
   const {
-		students,
-		isLoading,
-		createStudent,
-		deactivateStudent,
+    students,
+    isLoading,
+    createStudent,
+    deactivateStudent,
     reactivateStudent,
-		updateStudent,
+    updateStudent,
     getStudentHistory,
-	} = useStudents(slug, { includeInactive: true });
+  } = useStudents(slug, { includeInactive: true });
 
-
-
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historyData, setHistoryData] = useState<StudentHistoryData | null>(null);
 
-	// Lógica de estatísticas mantida conforme original
-	const stats: StudentStatsData = {
-		total: students.length,
-		active: students.filter((s: Student) => s.user?.is_active).length,
-		newThisMonth: 0, 
-		pending: students.filter((s: Student) => !s.user?.is_active).length,
-	};
+  const stats: StudentStatsData = {
+    total: students.length,
+    active: students.filter((student: Student) => student.user?.is_active).length,
+    newThisMonth: 0,
+    pending: students.filter((student: Student) => !student.user?.is_active).length,
+  };
 
   const handleOpenHistory = async (student: Student) => {
     setIsHistoryOpen(true);
@@ -49,93 +43,92 @@ export function StudentPage() {
       const history = await getStudentHistory(student.id);
       setHistoryData(history);
     } catch (error) {
-      console.error("Erro ao carregar historico do aluno:", error);
+      console.error('Erro ao carregar historico do aluno:', error);
     } finally {
       setIsHistoryLoading(false);
     }
   };
 
-	const handleSave = async (data: StudentFormData) => {
-		try {
-			if (selectedStudent) {
-				// Update usa o ID do estudante e o objeto de dados
-				await updateStudent({
-					id: selectedStudent.id,
-					data,
-				});
-			} else {
-				// Create usa apenas o objeto de dados (o slug já está no hook)
-				await createStudent(data);
-			}
-			setIsModalOpen(false);
-		} catch (error) {
-			console.error("Erro ao salvar estudante:", error);
-		}
-	};
+  const handleSave = async (data: StudentFormData) => {
+    try {
+      if (selectedStudent) {
+        await updateStudent({
+          id: selectedStudent.id,
+          data,
+        });
+      } else {
+        await createStudent(data);
+      }
 
-	if (isLoading)
-		return (
-			<div className="flex justify-center items-center h-64">
-				<span className="loading loading-dots loading-lg text-primary"></span>
-			</div>
-		);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Erro ao salvar estudante:', error);
+    }
+  };
 
-	return (
-		<div className="w-full space-y-6">
-			{/* Header da Página com Slug para contexto visual */}
-			<div className="flex justify-between">
-				<div className="flex items-start gap-3">
-					<Users size={30} className="text-primary" />
-					<h1 className="text-2xl font-black italic uppercase tracking-tighter">
-						Alunos <span className="text-gray-400">| {slug}</span>
-						<p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-							Gestão de membros da unidade
-						</p>
-					</h1>
-				</div>
-				<button
-					className="btn btn-primary font-black italic uppercase text-[11px] p-2"
-					onClick={() => {
-						setSelectedStudent(null);
-						setIsModalOpen(true);
-					}}>
-					<Plus size={10} strokeWidth={5}/> Novo Aluno
-				</button>
-			</div>
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <span className="loading loading-dots loading-lg text-primary"></span>
+      </div>
+    );
+  }
 
-			{/* Componentes de UI mantidos originais */}
-			<StudentStats stats={stats} />
+  return (
+    <div className="w-full space-y-6">
+      <div className="flex justify-between">
+        <div className="flex items-start gap-3">
+          <Users size={30} className="text-primary" />
+          <h1 className="text-2xl font-black italic uppercase tracking-tighter">
+            Alunos <span className="text-base-content/60">| {slug}</span>
+            <p className="text-[10px] font-bold text-base-content/60 uppercase tracking-widest">
+              Gestao de membros da unidade
+            </p>
+          </h1>
+        </div>
+        <button
+          className="btn btn-primary font-black italic uppercase text-[11px] p-2"
+          onClick={() => {
+            setSelectedStudent(null);
+            setIsModalOpen(true);
+          }}
+        >
+          <Plus size={10} strokeWidth={5} /> Novo Aluno
+        </button>
+      </div>
 
-			<StudentTable
-				students={students}
-				onEdit={(s) => {
-					setSelectedStudent(s);
-					setIsModalOpen(true);
-				}}
+      <StudentStats stats={stats} />
+
+      <StudentTable
+        students={students}
+        onEdit={(student) => {
+          setSelectedStudent(student);
+          setIsModalOpen(true);
+        }}
         onHistory={handleOpenHistory}
-				onDelete={(id) => {
+        onDelete={(id) => {
           const targetStudent = students.find((student) => student.id === id);
           if (!targetStudent) return;
 
           if (targetStudent.user?.is_active) {
-            if (confirm("Deseja realmente desativar este aluno?")) {
+            if (confirm('Deseja realmente desativar este aluno?')) {
               deactivateStudent(id);
             }
             return;
           }
 
-          if (confirm("Deseja reativar este aluno?")) {
+          if (confirm('Deseja reativar este aluno?')) {
             reactivateStudent(id);
           }
-				}}
-			/>
+        }}
+      />
 
-			<StudentModal
-				isOpen={isModalOpen}
-				onClose={() => setIsModalOpen(false)}
-				onSave={handleSave}
-				selectedStudent={selectedStudent}
-			/>
+      <StudentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        selectedStudent={selectedStudent}
+      />
 
       <StudentHistoryModal
         isOpen={isHistoryOpen}
@@ -143,6 +136,6 @@ export function StudentPage() {
         history={historyData}
         onClose={() => setIsHistoryOpen(false)}
       />
-		</div>
-	);
+    </div>
+  );
 }
