@@ -6,6 +6,24 @@ Plataforma SaaS para gestao de academias com arquitetura multi-tenant.
 
 - Web app (Railway): [https://ignitegym-front-end-production.up.railway.app/](https://ignitegym-front-end-production.up.railway.app/)
 
+## Screenshots reais da aplicacao
+
+As imagens abaixo sao capturas reais da aplicacao no estado atual do projeto.
+
+### Login
+
+![Tela de login](frontend-web/public/image.png)
+
+### Dashboard (mobile)
+
+![Dashboard mobile](frontend-web/public/Dashboard.png)
+
+### Alunos (light x dark)
+
+| Modo light | Modo dark |
+| --- | --- |
+| ![Alunos modo light](frontend-web/public/Alunos_light.png) | ![Alunos modo dark](frontend-web/public/Alunos_dark.png) |
+
 ## Objetivo do produto
 
 IgniteGym foi construida para operar o fluxo principal de uma academia:
