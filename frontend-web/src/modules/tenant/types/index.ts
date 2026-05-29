@@ -12,7 +12,6 @@ export interface Tenant {
 
 export interface UpdateUnitFormData {
   name: string;
-  slug: string;
   contact_email?: string;
   address?: string;
 }

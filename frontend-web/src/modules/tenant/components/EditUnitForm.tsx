@@ -13,7 +13,6 @@ export function EditUnitForm() {
     if (unit) {
       reset({
         name: unit.name,
-        slug: unit.slug,
         address: unit.address || '',
         contact_email: unit.contact_email || '',
       });
@@ -40,17 +39,17 @@ export function EditUnitForm() {
           />
         </div>
 
-        {/* Slug/URL */}
+        {/* Slug/URL (somente leitura) */}
         <div className="form-control w-full">
           <label className="label">
             <span className="label-text text-[10px] font-black uppercase text-base-content/60">Identificador URL (Slug)</span>
           </label>
-          <input
-            {...register('slug', { required: true })}
-            type="text"
-            className="input input-bordered font-bold lowercase text-xs focus:input-primary"
-            placeholder="slug-da-academia"
-          />
+          <div className="input input-bordered font-bold lowercase text-xs bg-base-200/70 flex items-center cursor-not-allowed">
+            {unit?.slug || 'slug-da-academia'}
+          </div>
+          <p className="mt-2 text-[10px] font-bold uppercase text-base-content/50">
+            O slug identifica a unidade nas URLs e nao pode ser alterado aqui.
+          </p>
         </div>
 
         {/* E-mail de Contato */}
