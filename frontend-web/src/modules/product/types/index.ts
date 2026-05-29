@@ -1,6 +1,13 @@
 
+interface ProductSupplier {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
 export interface Product {
-	supplier: any;
+  supplier?: ProductSupplier | null;
   is_active: boolean;
   id: string;
   name: string;
