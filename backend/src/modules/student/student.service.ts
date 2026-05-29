@@ -1,11 +1,21 @@
 import { sequelize } from '../../database/sequelize';
 import { Student } from '../../database/models/student.model';
 import { User } from '../../database/models/user.model';
-import { Tenant } from '../../database/models/tenant.model'; // Importe seu modelo de Tenant
+import { Tenant } from '../../database/models/tenant.model';
 import { CreateStudentDTO } from './dtos/create-student.dto';
 import { AppError } from '../../errors/AppError';
+import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export class StudentService {
+  private static async generateTemporaryPasswordHash() {
+    const temporarySecret = randomBytes(24).toString('hex');
+    return bcrypt.hash(temporarySecret, 10);
+  }
   
   /**
    * Método auxiliar para converter SLUG em ID
@@ -18,6 +28,15 @@ export class StudentService {
 
   static async create(slug: string, data: CreateStudentDTO) {
     const tenantId = await this.resolveTenantId(slug);
+    const name = data.name?.trim();
+
+    if (!name) {
+      throw new AppError('Nome do aluno é obrigatório.', 400);
+    }
+
+    if (data.email && !isValidEmail(data.email)) {
+      throw new AppError('E-mail inválido.', 400);
+    }
 
     if (data.email) {
       const exists = await User.findOne({ where: { email: data.email } });
@@ -26,13 +45,15 @@ export class StudentService {
 
     try {
       return await sequelize.transaction(async (t) => {
+        const password_hash = await this.generateTemporaryPasswordHash();
+
         const user = await User.create({
           tenant_id: tenantId,
           email: data.email ?? null,
           role: 'STUDENT',
-          name: data.name,
+          name,
           phone: data.phone ?? null,
-          password_hash: 'TEMP',
+          password_hash,
           is_active: true,
         }, { transaction: t });
 
@@ -76,6 +97,9 @@ export class StudentService {
     if (!student) throw new AppError('Aluno não encontrado.', 404);
 
     if (data.email && data.email !== student.user?.email) {
+      if (!isValidEmail(data.email)) {
+        throw new AppError('E-mail inválido.', 400);
+      }
       const emailExists = await User.findOne({ where: { email: data.email } });
       if (emailExists) throw new AppError('Este e-mail já está em uso.', 409);
     }

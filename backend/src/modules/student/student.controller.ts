@@ -27,7 +27,8 @@ export class StudentController {
       const students = await StudentService.list(slug);
       return res.json(students);
     } catch (error: any) {
-      return res.status(500).json({ status: "error", message: error.message });
+      const statusCode = error instanceof AppError ? error.statusCode : 500;
+      return res.status(statusCode).json({ status: "error", message: error.message });
     }
   }
 
